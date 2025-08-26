@@ -1,13 +1,5 @@
 {
-  "main": ".open-next/worker.js",
   "name": "weeziq",
   "compatibility_date": "2025-08-26",
-  "compatibility_flags": ["nodejs_compat"],
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  },
-  "env": {
-    "NODE_ENV": "production"
-  }
+  "compatibility_flags": ["nodejs_compat"]
 }
