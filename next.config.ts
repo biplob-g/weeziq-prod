@@ -28,6 +28,11 @@ const nextConfig: NextConfig = {
     ],
     unoptimized: true, // Required for Cloudflare
   },
+  
+  // Ensure proper routing for Cloudflare Pages
+  trailingSlash: false,
+  skipTrailingSlashRedirect: true,
+  
   webpack: (config, { dev }) => {
     if (!dev) {
       config.cache = {
