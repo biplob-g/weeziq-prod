@@ -28,7 +28,10 @@ const nextConfig: NextConfig = {
     ],
     unoptimized: true, // Required for Cloudflare
   },
-  
+
+  // Required for OpenNext to work properly
+  output: "standalone",
+
   webpack: (config, { dev }) => {
     if (!dev) {
       config.cache = {
@@ -51,5 +54,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
-initOpenNextCloudflareForDev();
