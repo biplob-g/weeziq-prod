@@ -20,8 +20,10 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // Configure for Cloudflare Pages dynamic functionality
-  output: "standalone",
+  // Configure for Cloudflare Pages with custom domain
+  output: "export",
+  trailingSlash: true,
+  skipTrailingSlashRedirect: true,
 
   images: {
     remotePatterns: [
@@ -29,7 +31,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "blog.ghatakbits.in" },
       { protocol: "https", hostname: "secure.gravatar.com" },
     ],
-    unoptimized: true, // Required for Cloudflare Pages
+    unoptimized: true, // Required for Cloudflare
   },
   webpack: (config, { dev }) => {
     if (!dev) {
