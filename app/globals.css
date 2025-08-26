@@ -1,0 +1,604 @@
+@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* Font configuration */
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* Custom font sizes for desktop */
+  --font-size-sm: 16px !important;
+
+  --color-sidebar: #24252d;
+  --color-sidebar-light: #ede3f4;
+
+  /* Radius values */
+  --radius-sm: 0.125rem;
+  --radius: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  /* Light theme colors */
+  --color-background: #edf6f9;
+  --color-foreground: #020817;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-card: #ffffff;
+  --color-card-foreground: #020817;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #020817;
+  --color-primary: #7c46e6;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #e2e8f0;
+  --color-secondary-foreground: #020817;
+  --color-accent: #f1f5f9;
+  --color-accent-foreground: #020817;
+  --color-border: #e2e8f0;
+  --color-ring: #7c46e6;
+}
+
+/* Root theme variables - light mode defaults */
+:root {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* Custom font sizes for desktop */
+  --font-size-sm: 18px;
+
+  /* Light Theme Colors */
+  --color-background: #ffffff;
+  --color-foreground: #020817;
+
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-muted-foreground-light: #7c8b9a;
+  --color-muted-foreground-dark: #4a5568;
+
+  --color-card: #ffffff;
+  --color-card-foreground: #020817;
+
+  --color-popover: #ffffff;
+  --color-popover-foreground: #020817;
+
+  /* Primary Accent Colors - Purple Theme */
+  --color-primary: #7c46e6;
+  --color-primary-foreground: #ffffff;
+  --color-primary-dark: #6b37d6;
+  --color-primary-light: #e6d9ff;
+
+  /* Secondary Accent Colors */
+  --color-secondary: #e2e8f0;
+  --color-secondary-foreground: #020817;
+
+  --color-accent: #f1f5f9;
+  --color-accent-foreground: #020817;
+
+  --color-border: #e2e8f0;
+  --color-border-light: #e2e8f0;
+  --color-border-dark: #cbd5e1;
+
+  --color-ring: #7c46e6;
+
+  --radius-sm: 0.125rem;
+  --radius: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  /* Sidebar Variables */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #020817;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #7c46e6;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #020817;
+  --sidebar-width: 16rem;
+  --sidebar-width-icon: 4rem;
+
+  /* Theme transition */
+  --theme-transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* Dark theme class - for manual toggling */
+.dark {
+  --color-background: #000000;
+  --color-foreground: #e7eceb;
+
+  --color-muted: #27272a;
+  --color-muted-foreground: oklch(0.7 0.02 160);
+  --color-muted-foreground-light: oklch(0.6 0.02 160);
+  --color-muted-foreground-dark: oklch(0.65 0.02 160);
+
+  --color-card: oklch(0.05 0.02 220);
+  --color-card-foreground: #e7eceb;
+
+  --color-popover: #0f1211;
+  --color-popover-foreground: #e7eceb;
+
+  /* Primary Accent Colors - Purple Theme */
+  --color-primary: #7c46e6;
+  --color-primary-foreground: #ffffff;
+  --color-primary-dark: #6b37d6;
+  --color-primary-light: #e6d9ff;
+
+  /* Secondary Accent Colors */
+  --color-secondary: #e7eceb;
+  --color-secondary-foreground: #141a18;
+
+  --color-accent: #3f3f42;
+  --color-accent-foreground: #f4f4f5;
+
+  --color-border: oklch(1 0 0 / 0.08);
+  --color-border-light: oklch(0.1 0.02 210 / 0.1);
+  --color-border-dark: oklch(0.05 0.02 210 / 0.05);
+
+  --color-ring: #7c46e6;
+
+  /* Sidebar Variables */
+  --sidebar: #0f1211;
+  --sidebar-foreground: #e7eceb;
+  --sidebar-border: oklch(1 0 0 / 0.08);
+  --sidebar-ring: #7c46e6;
+  --sidebar-accent: #3f3f42;
+  --sidebar-accent-foreground: #f4f4f5;
+  --sidebar-width: 16rem;
+  --sidebar-width-icon: 4rem;
+}
+
+/* System preference based dark mode - only applies if no .dark class is present */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --color-background: #000000;
+    --color-foreground: #e7eceb;
+
+    --color-muted: #27272a;
+    --color-muted-foreground: oklch(0.7 0.02 160);
+    --color-muted-foreground-light: oklch(0.6 0.02 160);
+    --color-muted-foreground-dark: oklch(0.65 0.02 160);
+
+    --color-card: oklch(0.05 0.02 220);
+    --color-card-foreground: #e7eceb;
+
+    --color-popover: #0f1211;
+    --color-popover-foreground: #e7eceb;
+
+    /* Primary Accent Colors - Purple Theme */
+    --color-primary: #7c46e6;
+    --color-primary-foreground: #ffffff;
+    --color-primary-dark: #6b37d6;
+    --color-primary-light: #e6d9ff;
+
+    /* Secondary Accent Colors */
+    --color-secondary: #e7eceb;
+    --color-secondary-foreground: #141a18;
+
+    --color-accent: #3f3f42;
+    --color-accent-foreground: #f4f4f5;
+
+    --color-border: oklch(1 0 0 / 0.08);
+    --color-border-light: oklch(0.1 0.02 210 / 0.1);
+    --color-border-dark: oklch(0.05 0.02 210 / 0.05);
+
+    --color-ring: #7c46e6;
+
+    /* Sidebar Variables */
+    --sidebar: #0f1211;
+    --sidebar-foreground: #e7eceb;
+    --sidebar-border: oklch(1 0 0 / 0.08);
+    --sidebar-ring: #7c46e6;
+    --sidebar-accent: #3f3f42;
+    --sidebar-accent-foreground: #f4f4f5;
+    --sidebar-width: 16rem;
+    --sidebar-width-icon: 4rem;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-feature-settings: "rlig" 1, "calt" 1;
+    transition: var(--theme-transition);
+  }
+}
+
+@layer components {
+  /* Button cursor fix */
+  button {
+    cursor: pointer !important;
+  }
+
+  /* Clerk UI fixes */
+  .cl-internal-1dauvpw {
+    display: none !important;
+  }
+
+  .cl-userButtonPopoverFooter {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  /* Primary gradient button */
+  .btn-primary-gradient {
+    background: linear-gradient(17.51deg, #7c46e6 17.51%, #7c87f7 183.08%);
+    border: 1px solid oklch(1 0 0 / 0.14);
+    border-radius: 30px !important;
+    color: white;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(0);
+  }
+
+  .btn-primary-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px oklch(0.6 0.2 280 / 0.3);
+  }
+
+  .btn-primary-gradient:active {
+    transform: translateY(-1px);
+  }
+
+  /* Header glassmorphism */
+  .header-glassmorphism {
+    background: oklch(1 0 0 / 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid oklch(0 0 0 / 0.08);
+    box-shadow: 0 8px 32px oklch(0 0 0 / 0.12);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+
+  .dark .header-glassmorphism {
+    background: oklch(0.1 0.02 160 / 0.85);
+    border-bottom: 1px solid oklch(1 0 0 / 0.08);
+    box-shadow: 0 8px 32px oklch(0 0 0 / 0.12);
+  }
+
+  /* System dark mode glassmorphism */
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light) .header-glassmorphism {
+      background: oklch(0.1 0.02 160 / 0.85);
+      border-bottom: 1px solid oklch(1 0 0 / 0.08);
+      box-shadow: 0 8px 32px oklch(0 0 0 / 0.12);
+    }
+  }
+
+  .header-glassmorphism::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      oklch(0.6 0.2 280 / 0.05) 0%,
+      oklch(0.7 0.15 260 / 0.03) 50%,
+      oklch(1 0 0 / 0.02) 100%
+    );
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* Navigation links */
+  .nav-link {
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-block;
+  }
+
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #7c46e6, #7c87f7);
+    border-radius: 1px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-50%);
+  }
+
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
+  .nav-link:hover {
+    color: var(--color-foreground);
+    transform: translateY(-1px);
+  }
+
+  /* Theme specific styles - Light mode */
+  .light .social-proof-text {
+    color: #6b7280;
+  }
+
+  .light .bento-card-bg {
+    background: oklch(0 0 0 / 0.02);
+    border: 1px solid oklch(0 0 0 / 0.08);
+  }
+
+  .light .faq-card-bg {
+    background: oklch(0 0 0 / 0.02);
+    border: 1px solid oklch(0 0 0 / 0.08);
+  }
+
+  /* Theme specific styles - Dark mode (manual) */
+  .dark .social-proof-text {
+    color: #9ca3af;
+  }
+
+  .dark .bento-card-bg {
+    background: oklch(0.9 0.02 160 / 0.08);
+    border: 1px solid oklch(1 0 0 / 0.2);
+  }
+
+  .dark .faq-card-bg {
+    background: oklch(0.9 0.02 160 / 0.08);
+    border: 1px solid oklch(1 0 0 / 0.08);
+  }
+
+  /* Theme specific styles - System dark mode */
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light) .social-proof-text {
+      color: #9ca3af;
+    }
+
+    :root:not(.light) .bento-card-bg {
+      background: oklch(0.9 0.02 160 / 0.08);
+      border: 1px solid oklch(1 0 0 / 0.2);
+    }
+
+    :root:not(.light) .faq-card-bg {
+      background: oklch(0.9 0.02 160 / 0.08);
+      border: 1px solid oklch(1 0 0 / 0.08);
+    }
+  }
+
+  /* Navigation pill styles */
+  .nav-pill {
+    background: oklch(1 0 0 / 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid oklch(1 0 0 / 0.2);
+    transition: var(--theme-transition);
+  }
+
+  .dark .nav-pill {
+    background: oklch(0 0 0 / 0.2);
+    border: 1px solid oklch(1 0 0 / 0.1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light) .nav-pill {
+      background: oklch(0 0 0 / 0.2);
+      border: 1px solid oklch(1 0 0 / 0.1);
+    }
+  }
+
+  /* Blog Content Styles */
+  .blog-content {
+    line-height: 1.8;
+  }
+
+  .blog-content h1,
+  .blog-content h2,
+  .blog-content h3,
+  .blog-content h4,
+  .blog-content h5,
+  .blog-content h6 {
+    color: var(--color-foreground);
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    transition: color 0.2s ease;
+  }
+
+  .blog-content h1 {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+
+  .blog-content h2 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .blog-content h3 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+
+  .blog-content h4 {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+
+  .blog-content p {
+    margin-bottom: 1.5rem;
+    color: var(--color-muted-foreground);
+    transition: color 0.2s ease;
+  }
+
+  .blog-content a {
+    color: var(--color-primary);
+    text-decoration: underline;
+    transition: color 0.2s ease-in-out;
+  }
+
+  .blog-content a:hover {
+    color: var(--color-primary-dark);
+  }
+
+  .blog-content ul,
+  .blog-content ol {
+    margin-bottom: 1.5rem;
+    padding-left: 1.5rem;
+  }
+
+  .blog-content li {
+    margin-bottom: 0.5rem;
+    color: var(--color-muted-foreground);
+    transition: color 0.2s ease;
+  }
+
+  .blog-content ul li {
+    list-style-type: disc;
+  }
+
+  .blog-content ol li {
+    list-style-type: decimal;
+  }
+
+  .blog-content blockquote {
+    border-left: 4px solid var(--color-primary);
+    padding-left: 1.5rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    background-color: color-mix(
+      in oklch,
+      var(--color-primary),
+      transparent 95%
+    );
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    font-style: italic;
+    color: var(--color-muted-foreground-dark);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .blog-content code {
+    background-color: var(--color-muted);
+    color: var(--color-foreground);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas,
+      "Liberation Mono", Menlo, monospace;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .blog-content pre {
+    background-color: var(--color-muted);
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+    transition: background-color 0.2s ease;
+  }
+
+  .blog-content pre code {
+    background-color: transparent;
+    padding: 0;
+  }
+
+  .blog-content img {
+    border-radius: var(--radius-lg);
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .blog-content table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--color-border);
+    margin-bottom: 1.5rem;
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+  }
+
+  .blog-content th,
+  .blog-content td {
+    border: 1px solid var(--color-border);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    transition: border-color 0.2s ease;
+  }
+
+  .blog-content th {
+    background-color: var(--color-muted);
+    font-weight: 600;
+    color: var(--color-foreground);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .blog-content td {
+    color: var(--color-muted-foreground);
+    transition: color 0.2s ease;
+  }
+
+  /* Line clamp utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Additional smooth transitions for all components */
+  .btn-primary-gradient,
+  .header-glassmorphism,
+  .nav-link,
+  .nav-pill,
+  .bento-card-bg,
+  .faq-card-bg {
+    transition: var(--theme-transition);
+  }
+
+  /* Force sidebar background in light mode */
+  [data-slot="sidebar-inner"] {
+    background-color: #ede3f4 !important;
+  }
+
+  .dark [data-slot="sidebar-inner"] {
+    background-color: var(--sidebar) !important;
+  }
+}
+
+@theme inline {
+  --animate-meteor: meteor 5s linear infinite;
+  @keyframes meteor {
+    0% {
+      transform: rotate(var(--angle)) translateX(0);
+      opacity: 1;
+    }
+    70% {
+      opacity: 1;
+    }
+    100% {
+      transform: rotate(var(--angle)) translateX(-500px);
+      opacity: 0;
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

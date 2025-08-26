@@ -1,0 +1,219 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullname     String
+  clerkId      String    @unique
+  role         String    @default("admin") // All users are admins now
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  subscription Billings?
+  domains      Domain[]
+  aiUsage      AiUsage[]
+  googleIntegration GoogleIntegration?
+  fileUploads  FileUpload[] // ✅ NEW: Relation to file uploads
+}
+
+model Domain {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  icon            String
+  userId          String?           @db.Uuid
+  chatBot         ChatBot?
+  customer        Customer[]
+  User            User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  filterQuestions FilterQuestions[]
+  helpdesk        HelpDesk[]
+  aiUsage         AiUsage[]
+  satisfactionRatings SatisfactionRating[] // ✅ NEW: Added relation
+  fileUploads     FileUpload[] // ✅ NEW: Relation to file uploads
+}
+
+model ChatBot {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  welcomeMessage String?
+  icon           String?
+  domainID       String?  @unique @db.Uuid
+  background     String?
+  helpdesk       Boolean?
+  textColor      String?
+  taskSummary    String?  // ✅ NEW: Detailed brief about what the platform does
+  Domain         Domain?  @relation(fields: [domainID], references: [id], onDelete: Cascade)
+}
+
+model Billings {
+  id                        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  plan                      Plans     @default(STARTER)
+  // AI Chatbot Credits (Pro model only)
+  aiCreditsUsed             Int       @default(0)
+  aiCreditsLimit            Int       @default(50)
+  // Email Campaign Credits
+  emailCreditsUsed          Int       @default(0)
+  emailCreditsLimit         Int       @default(50)
+  // Subscription tracking
+  subscriptionStatus        String    @default("trial") // "trial", "active", "cancelled"
+  trialStartDate            DateTime? @default(now())
+  trialEndDate              DateTime?
+  currentPeriodStart        DateTime? @default(now())
+  currentPeriodEnd          DateTime?
+  // Legacy field (keeping for compatibility)
+  credits                   Int       @default(10)
+  userId                    String?   @unique @db.Uuid
+  User                      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+}
+
+model HelpDesk {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  question String
+  answered String
+  domainId String @db.Uuid
+  Domain   Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+}
+
+model FilterQuestions {
+  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  question String
+  answered String
+  domainId String? @db.Uuid
+  Domain   Domain? @relation(fields: [domainId], references: [id], onDelete: Cascade)
+}
+
+model CustomerResponses {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  question   String
+  answered   String
+  customerId String   @db.Uuid
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model Customer {
+  id          String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String?
+  email       String?
+  phone       String?
+  countryCode String?             @default("+1")
+  ipAddress   String?             // ✅ Added: IP address for tracking returning users
+  domainId    String?             @db.Uuid
+  chatRoom    ChatRoom[]
+  Domain      Domain?             @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  questions   CustomerResponses[]
+  satisfactionRatings SatisfactionRating[] // ✅ NEW: Added relation
+  createdAt   DateTime            @default(now())  // ✅ Added: Track when customer was created
+}
+
+model ChatRoom {
+  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  mailed     Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  customerId String?       @db.Uuid
+  live       Boolean       @default(false)
+  message    ChatMessage[]
+  Customer   Customer?     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model ChatMessage {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  message    String
+  role       Role?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  chatRoomId String   @db.Uuid
+  seen       Boolean  @default(false)
+  ChatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  // AI Usage tracking
+  aiUsage    AiUsage?
+}
+
+model AiUsage {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  chatMessageId String      @unique @db.Uuid
+  modelUsed     String      // "gemini-pro" or "gemini-flash-lite"
+  tokensUsed    Int         // Number of tokens consumed
+  creditsUsed   Int         @default(0) // Credits used (1 credit = 1000 tokens for Pro model)
+  domainId      String      @db.Uuid
+  userId        String      @db.Uuid
+  createdAt     DateTime    @default(now())
+  ChatMessage   ChatMessage @relation(fields: [chatMessageId], references: [id], onDelete: Cascade)
+  Domain        Domain      @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  User          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ✅ NEW: Satisfaction Rating model
+model SatisfactionRating {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rating      String   // "positive" or "negative"
+  feedback    String?  // Optional feedback text
+  domainId    String   @db.Uuid
+  visitorId   String   // Unique visitor identifier
+  customerId  String?  @db.Uuid // Optional: if customer is logged in
+  createdAt   DateTime @default(now())
+  Domain      Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  Customer    Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+enum Plans {
+  STARTER     // Free Trial - 14 Days
+  GROWTH      // $12/month
+  PRO         // $39/month
+  // Legacy plans (keeping for compatibility)
+  STANDARD
+  ULTIMATE
+}
+
+enum Role {
+  OWNER
+  CUSTOMER
+}
+
+// Google Integration models
+model GoogleIntegration {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @unique @db.Uuid
+  accessToken  String   // Encrypted access token
+  refreshToken String   // Encrypted refresh token
+  expiresAt    DateTime
+  email        String   // Google account email
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exportHistory ExportHistory[]
+}
+
+model ExportHistory {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @db.Uuid
+  spreadsheetId String   // Google Sheets spreadsheet ID
+  sheetName     String   // Sheet name within the spreadsheet
+  recordCount   Int      // Number of records exported
+  status        String   // "SUCCESS" or "FAILED"
+  exportedAt    DateTime @default(now())
+  GoogleIntegration GoogleIntegration @relation(fields: [userId], references: [userId], onDelete: Cascade)
+}
+
+// ✅ NEW: File Upload model for AI processing
+model FileUpload {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fileName    String   // Original file name
+  fileSize    Int      // File size in bytes
+  fileType    String   // File extension (.txt, .json)
+  filePath    String   // Path to stored file
+  fileContent String?  // ✅ NEW: Actual file content for AI processing
+  uploadStatus String  @default("PENDING") // "PENDING", "PROCESSING", "COMPLETED", "FAILED"
+  userId      String   @db.Uuid
+  domainId    String   @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Domain      Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+}
