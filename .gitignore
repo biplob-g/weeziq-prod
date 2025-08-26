@@ -57,3 +57,5 @@ node_modules
 .next
 node_modules
 scripts
+package-lock.json
+package.json

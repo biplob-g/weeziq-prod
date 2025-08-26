@@ -17,6 +17,11 @@ export const onCreateSubscription = async (planType: PaidPlanType) => {
       return { success: false, error: "User not authenticated" };
     }
 
+    // Check if Razorpay is initialized
+    if (!razorpay) {
+      return { success: false, error: "Payment service not configured" };
+    }
+
     const planId = RAZORPAY_PLANS[planType];
     console.log("Creating subscription with planType:", planType);
     console.log("Using planId:", planId);
@@ -60,6 +65,11 @@ export const onVerifySubscription = async (
     const user = await currentUser();
     if (!user) {
       return { success: false, error: "User not authenticated" };
+    }
+
+    // Check if Razorpay is initialized
+    if (!razorpay) {
+      return { success: false, error: "Payment service not configured" };
     }
 
     // Verify payment signature
