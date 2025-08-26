@@ -27,6 +27,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "blog.ghatakbits.in" },
       { protocol: "https", hostname: "secure.gravatar.com" },
     ],
+    unoptimized: true, // Required for Cloudflare Pages
   },
   webpack: (config, { dev }) => {
     if (!dev) {
