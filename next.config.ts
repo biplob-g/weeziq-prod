@@ -20,6 +20,9 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
 
+  // Configure for Cloudflare Pages dynamic functionality
+  output: "standalone",
+
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "ucarecdn.com" },

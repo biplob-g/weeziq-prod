@@ -1,6 +1,8 @@
-# WeezGen - AI Chatbot Platform
+# WeezIQ - AI Chatbot Sales Assistant
 
-A Next.js 15 chatbot platform with AI-powered conversations, user management, and admin dashboard.
+<!-- Latest deployment: 2025-08-26 -->
+
+Your one-stop AI Chatbot Sales Assistant for modern businesses.
 
 ## 🚀 Quick Start
 
