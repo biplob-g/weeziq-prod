@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
     ],
     unoptimized: true, // Required for Cloudflare
   },
-
+  
   webpack: (config, { dev }) => {
     if (!dev) {
       config.cache = {
