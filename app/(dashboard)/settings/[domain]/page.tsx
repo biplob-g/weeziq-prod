@@ -1,22 +1,12 @@
 /**
- * Domain Settings Page with Static Generation
+
+* Domain Settings Page - Dynamic Rendering
  *
- * This page uses generateStaticParams to pre-render all domain settings pages
- * at build time, improving performance and user experience.
- *
- * Benefits:
- * - Instant page loads for all domain settings
- * - Better SEO and search engine crawling
- * - Reduced server load
- * - Improved caching
- *
- * The page maintains all existing functionality while adding static generation.
+ * This page uses dynamic rendering to handle user-specific domain settings
+ * with proper authentication and real-time data.
  */
 
-import {
-  onGetCurrentDomainInfo,
-  getAllDomainsForStaticGeneration,
-} from "@/actions/settings";
+import { onGetCurrentDomainInfo } from "@/actions/settings";
 import SettingsForm from "@/components/forms/SignUp/settings/form";
 import InfoBars from "@/components/infoBar";
 import BotTrainingForm from "@/components/settings/BotTrainingForm";
@@ -24,34 +14,10 @@ import { redirect } from "next/navigation";
 import React from "react";
 import { Metadata } from "next";
 
+// Force dynamic rendering for this page
+export const dynamic = "force-dynamic";
+
 type Props = { params: Promise<{ domain: string }> };
-
-// Generate static params for all domains at build time
-export async function generateStaticParams() {
-  try {
-    console.log("🔧 Generating static params for domain settings pages...");
-
-    const allDomains = await getAllDomainsForStaticGeneration();
-
-    console.log(`📊 Found ${allDomains.length} domains for static generation`);
-
-    // Generate static paths for each domain
-    const params = allDomains.map((domain) => ({
-      domain: domain.name,
-    }));
-
-    console.log(
-      "✅ Generated static params:",
-      params.map((p) => p.domain)
-    );
-
-    return params;
-  } catch (error) {
-    console.error("❌ Error generating static params:", error);
-    // Return empty array to prevent build failure
-    return [];
-  }
-}
 
 // Generate metadata for each domain page
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

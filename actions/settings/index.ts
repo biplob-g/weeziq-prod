@@ -767,29 +767,7 @@ export const onGetAllFilterQuestions = async (id: string) => {
   }
 };
 
-// New function for static generation - fetches all domains
-export const getAllDomainsForStaticGeneration = async () => {
-  try {
-    // Fetch all domains from the database for static generation
-    const allDomains = await client.domain.findMany({
-      select: {
-        id: true,
-        name: true,
-        userId: true,
-        User: {
-          select: {
-            clerkId: true,
-          },
-        },
-      },
-    });
 
-    return allDomains;
-  } catch (error) {
-    console.error("Error fetching domains for static generation:", error);
-    return [];
-  }
-};
 
 // ✅ NEW: Task Summary Functions
 export const onUpdateTaskSummary = async (
