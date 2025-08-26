@@ -29,8 +29,11 @@ const nextConfig: NextConfig = {
     unoptimized: true, // Required for Cloudflare
   },
 
-  // Required for OpenNext to work properly
+  // REQUIRED for OpenNext to work properly - creates dynamic site
   output: "standalone",
+
+  // Server external packages for better compatibility
+  serverExternalPackages: ["@prisma/client"],
 
   webpack: (config, { dev }) => {
     if (!dev) {
