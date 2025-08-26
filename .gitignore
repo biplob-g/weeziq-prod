@@ -58,3 +58,4 @@ next-env.d.ts
 # Package manager files
 .pnp.*
 .yarn/*
+package-lock.json
