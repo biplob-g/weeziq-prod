@@ -1,4 +1,4 @@
-// Catch-all function for Next.js static export routes
+// Catch-all function for Next.js dynamic routes
 export async function onRequest(context) {
     const { request, env } = context;
     const url = new URL(request.url);
@@ -10,23 +10,13 @@ export async function onRequest(context) {
             return env.ASSETS.fetch(request);
         }
         
-        // Handle static files first
+        // Handle all other routes through the Next.js app
         const response = await env.ASSETS.fetch(request);
         
         // If the asset fetch fails, try serving the index.html for SPA routing
         if (response.status === 404) {
-            // Try with trailing slash
-            const pathWithSlash = url.pathname.endsWith('/') ? url.pathname : url.pathname + '/';
-            const slashRequest = new Request(new URL(pathWithSlash, url), request);
-            const slashResponse = await env.ASSETS.fetch(slashRequest);
-            
-            if (slashResponse.status === 404) {
-                // Fallback to index.html for client-side routing
-                const indexRequest = new Request(new URL('/', url), request);
-                return env.ASSETS.fetch(indexRequest);
-            }
-            
-            return slashResponse;
+            const indexRequest = new Request(new URL('/', url), request);
+            return env.ASSETS.fetch(indexRequest);
         }
         
         return response;

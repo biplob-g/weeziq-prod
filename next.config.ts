@@ -29,10 +29,6 @@ const nextConfig: NextConfig = {
     unoptimized: true, // Required for Cloudflare
   },
   
-  // Generate static export for Cloudflare Pages
-  output: 'export',
-  trailingSlash: true,
-  
   webpack: (config, { dev }) => {
     if (!dev) {
       config.cache = {
