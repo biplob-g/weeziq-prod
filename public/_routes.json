@@ -3,7 +3,6 @@
   "include": ["/*"],
   "exclude": [
     "/_next/*",
-    "/api/*",
     "/favicon.ico",
     "/robots.txt",
     "/sitemap.xml"
