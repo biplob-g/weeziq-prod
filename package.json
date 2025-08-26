@@ -8,7 +8,7 @@
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:socket\"",
     "dev:with-socket": "concurrently \"next dev\" \"node socket-server.js\"",
     "build": "next build",
-    "build:cloudflare": "opennextjs-cloudflare build --skipNextBuild",
+    "build:cloudflare": "opennextjs-cloudflare build",
     "build:standard": "next build",
     "preview": "npm run build:cloudflare && wrangler dev --port 8771",
     "deploy": "npm run build:cloudflare && wrangler deploy",
