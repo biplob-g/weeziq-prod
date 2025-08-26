@@ -111,7 +111,6 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
-    "@cloudflare/next-on-pages": "^1.13.14",
     "@eslint/eslintrc": "^3",
     "@playwright/test": "^1.54.2",
     "@tailwindcss/postcss": "^4",
