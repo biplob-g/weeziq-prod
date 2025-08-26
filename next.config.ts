@@ -20,11 +20,6 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // Configure for Cloudflare Pages with custom domain
-  output: "export",
-  trailingSlash: true,
-  skipTrailingSlashRedirect: true,
-
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "ucarecdn.com" },
