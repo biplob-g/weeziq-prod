@@ -8,6 +8,7 @@
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:socket\"",
     "dev:with-socket": "concurrently \"next dev\" \"node socket-server.js\"",
     "build": "next build",
+    "build:cloudflare": "npx @cloudflare/next-on-pages",
     "start": "next start",
     "start:socket": "node socket-server.js",
     "lint": "next lint",
