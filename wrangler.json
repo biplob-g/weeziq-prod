@@ -1,5 +1,4 @@
 {
   "name": "weeziq",
-  "compatibility_date": "2025-08-26",
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_date": "2025-08-26"
 }
