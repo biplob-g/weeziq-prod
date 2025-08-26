@@ -8,7 +8,7 @@
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:socket\"",
     "dev:with-socket": "concurrently \"next dev\" \"node socket-server.js\"",
     "build": "next build",
-    "build:cloudflare": "opennextjs-cloudflare build --noMinify --skipWranglerConfigCheck",
+    "build:cloudflare": "next build",
     "build:standard": "next build",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
