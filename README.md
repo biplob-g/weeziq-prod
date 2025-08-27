@@ -1,282 +1,162 @@
-# WeezIQ - AI Chatbot Sales Assistant
+# Weeziq Monorepo
 
-<!-- Latest deployment: 2025-08-26 -->
-
-Your one-stop AI Chatbot Sales Assistant for modern businesses.
-
-## 🚀 Quick Start
-
-```bash
-# Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.example .env.local
-
-# Run database migrations
-npx prisma db push
-
-# Start development server
-npm run dev
-```
-
-## 🧪 Testing
-
-WeezGen includes comprehensive testing tools to ensure all features work correctly.
-
-### **Testing Tools**
-
-- **Jest**: Unit and integration testing
-- **React Testing Library**: Component testing
-- **Playwright**: End-to-end testing
-- **Custom Test Scripts**: Feature validation
-
-### **Running Tests**
-
-```bash
-# Run all tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run E2E tests
-npm run test:e2e
-
-# Run E2E tests with UI
-npm run test:e2e:ui
-
-# Run specific test types
-npm run test:unit      # Unit tests only
-npm run test:integration # Integration tests only
-npm run test:db        # Database tests only
-```
-
-### **Feature Testing Script**
-
-Test all implemented features with our comprehensive testing script:
-
-```bash
-# Run feature tests
-npx tsx scripts/test-features.ts
-```
-
-This script tests:
-
-- ✅ **User Information Form**: Form validation and submission
-- ✅ **IP-based Chat History**: Returning user detection
-- ✅ **AI Chatbot**: Response generation and conversation flow
-- ✅ **Admin Panel**: Conversation management and filtering
-- ✅ **Database Operations**: Customer creation, IP detection, conversation deletion
-- ✅ **Country Detection**: IP-based country code auto-detection
-
-### **Test Coverage**
-
-Our testing strategy covers:
-
-#### **Unit Tests** (80%+ coverage)
-
-- Component rendering and interactions
-- Hook logic and state management
-- Utility functions and validations
-- Form handling and validation
-
-#### **Integration Tests** (70%+ coverage)
-
-- Server actions and API endpoints
-- Database operations and relationships
-- Authentication flows
-- AI integration
-
-#### **E2E Tests** (Critical flows)
-
-- Complete user registration flow
-- Chatbot conversation flow
-- Admin panel operations
-- Cross-browser compatibility
-
-### **Testing Best Practices**
-
-1. **Component Testing**: Test user interactions and accessibility
-2. **Hook Testing**: Test business logic and state management
-3. **Integration Testing**: Test API endpoints and database operations
-4. **E2E Testing**: Test complete user workflows
-5. **Performance Testing**: Test loading times and responsiveness
-
-### **Test Data Management**
-
-- **Test Database**: Separate test database for isolated testing
-- **Mock Data**: Consistent test data for reliable results
-- **Cleanup**: Automatic cleanup after each test
-- **Isolation**: Each test runs independently
+This is a monorepo containing both the Next.js frontend application and the WebSocket/AI service.
 
 ## 📁 Project Structure
 
 ```
-weezgen/
-├── __tests__/              # Test files
-│   ├── components/         # Component tests
-│   ├── hooks/             # Hook tests
-│   ├── lib/               # Utility tests
-│   └── integration/       # Integration tests
-├── e2e/                   # End-to-end tests
-├── scripts/               # Testing and maintenance scripts
-├── components/            # React components
-├── hooks/                 # Custom React hooks
-├── actions/               # Server actions
-├── lib/                   # Utilities and configurations
-└── prisma/                # Database schema
+weeziq-test/
+├── apps/
+│   ├── nextjs-app/          # Next.js frontend (deployed on Vercel)
+│   │   ├── app/             # Next.js app directory
+│   │   ├── components/      # React components
+│   │   ├── lib/            # Utilities and configurations
+│   │   ├── prisma/         # Database schema and migrations
+│   │   └── ...
+│   └── ws-service/         # WebSocket + AI service (deployed on Cloudflare)
+│       ├── src/            # Cloudflare Worker source code
+│       ├── socket-server.js # Legacy socket server
+│       └── ...
+└── package.json            # Root workspace configuration
 ```
 
-## 🔧 Development
+## 🚀 Quick Start
 
-### **Environment Variables**
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- Vercel account (for frontend deployment)
+- Cloudflare account (for WebSocket service)
+
+### Installation
+
+1. **Install all dependencies:**
+
+   ```bash
+   npm run install:all
+   ```
+
+2. **Start Next.js development server:**
+
+   ```bash
+   npm run dev:next
+   ```
+
+3. **Start WebSocket service (in another terminal):**
+   ```bash
+   npm run dev:ws
+   ```
+
+## 🏗️ Development
+
+### Next.js App (apps/nextjs-app/)
+
+- **Framework:** Next.js 15 with App Router
+- **Styling:** Tailwind CSS
+- **UI Components:** Radix UI
+- **Database:** Prisma with PostgreSQL
+- **Authentication:** Clerk
+
+### WebSocket Service (apps/ws-service/)
+
+- **Platform:** Cloudflare Workers
+- **WebSockets:** Native WebSocket API with Durable Objects
+- **AI Integration:** OpenAI API
+- **Framework:** Hono (lightweight web framework)
+
+## 🌐 Deployment
+
+### Frontend (Vercel)
+
+1. Connect your GitHub repository to Vercel
+2. Set the **Root Directory** to `apps/nextjs-app`
+3. Configure environment variables in Vercel dashboard
+4. Deploy
+
+### WebSocket Service (Cloudflare)
+
+1. Install Wrangler CLI: `npm install -g wrangler`
+2. Login to Cloudflare: `wrangler login`
+3. Navigate to ws-service: `cd apps/ws-service`
+4. Deploy: `npm run deploy`
+
+## 🔧 Environment Variables
+
+### Next.js App (.env.local)
 
 ```env
 # Database
-DATABASE_URL="postgresql://..."
+DATABASE_URL="your-postgresql-url"
 
 # Authentication
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_..."
-CLERK_SECRET_KEY="sk_..."
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="your-clerk-key"
+CLERK_SECRET_KEY="your-clerk-secret"
 
-# AI
-GEMINI_API_KEY="..."
-
-# File Upload
-NEXT_PUBLIC_UPLOAD_CARE_PUBLIC_KEY="..."
+# WebSocket Service
+NEXT_PUBLIC_WS_URL="wss://your-cloudflare-worker.your-subdomain.workers.dev/ws"
+NEXT_PUBLIC_AI_API_URL="https://your-cloudflare-worker.your-subdomain.workers.dev/ai"
 ```
 
-### **Database Setup**
+### WebSocket Service (Cloudflare Workers)
 
-```bash
-# Generate Prisma client
-npx prisma generate
+```env
+# AI Services
+OPENAI_API_KEY="your-openai-api-key"
+GOOGLE_AI_API_KEY="your-google-ai-key"
 
-# Push schema changes
-npx prisma db push
-
-# Open database GUI
-npx prisma studio
+# CORS Origins
+ALLOWED_ORIGINS="https://your-vercel-app.vercel.app,http://localhost:3000"
 ```
 
-### **Code Quality**
+## 📝 Scripts
 
-```bash
-# Lint code
-npm run lint
+### Root Level
 
-# Type check
-npx tsc --noEmit
+- `npm run dev:next` - Start Next.js development server
+- `npm run dev:ws` - Start WebSocket service development
+- `npm run build:next` - Build Next.js app
+- `npm run build:ws` - Build WebSocket service
+- `npm run deploy:next` - Deploy to Vercel
+- `npm run deploy:ws` - Deploy to Cloudflare
 
-# Format code
-npx prettier --write .
-```
+### Next.js App
 
-## 🎯 Key Features
+- `npm run dev` - Development server
+- `npm run build` - Production build
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run test` - Run tests
 
-### **User Information Form**
+### WebSocket Service
 
-- Collect user details (name, email, phone)
-- IP-based country detection
-- Form validation with Zod
-- Personalized welcome messages
+- `npm run dev` - Start Wrangler development server
+- `npm run deploy` - Deploy to Cloudflare Workers
 
-### **IP-based Chat History**
+## 🔗 Communication Between Services
 
-- Detect returning users by IP address
-- Show previous conversations
-- 14-day retention period
-- Seamless user experience
+The Next.js app communicates with the WebSocket service via:
 
-### **AI Chatbot**
+- **WebSocket connections** for real-time chat
+- **HTTP API calls** for AI responses
 
-- Google Gemini integration
-- Real-time conversations
-- File upload support
-- Context-aware responses
+## 🛠️ Troubleshooting
 
-### **Admin Dashboard**
+### Common Issues
 
-- Conversation management
-- Customer information display
-- Filtering (All/Unread/Expired)
-- Delete conversations
+1. **Port conflicts:** Make sure ports 3000 (Next.js) and 8787 (Wrangler) are available
+2. **CORS errors:** Update `ALLOWED_ORIGINS` in Cloudflare Workers
+3. **Environment variables:** Ensure all required env vars are set in both Vercel and Cloudflare
 
-### **Multi-domain Support**
+### Development Tips
 
-- Domain-specific chatbots
-- User domain management
-- URL-based domain selection
+- Use `npm run dev:next` and `npm run dev:ws` in separate terminals
+- Check Cloudflare Workers logs in the Wrangler dashboard
+- Use Vercel's function logs for debugging API routes
 
-## 🚀 Deployment
+## 📚 Additional Resources
 
-### **Vercel Deployment**
-
-1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
-
-### **Database Migration**
-
-```bash
-# Create production migration
-npx prisma migrate deploy
-
-# Verify database connection
-npx prisma db push
-```
-
-## 📊 Monitoring
-
-### **Performance Monitoring**
-
-- Page load times
-- API response times
-- Database query performance
-- Error tracking
-
-### **User Analytics**
-
-- Conversation metrics
-- User engagement
-- Feature usage
-- Conversion tracking
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Write tests for new features
-4. Ensure all tests pass
-5. Submit a pull request
-
-### **Testing Checklist**
-
-Before submitting a PR, ensure:
-
-- [ ] All unit tests pass
-- [ ] Integration tests pass
-- [ ] E2E tests pass
-- [ ] Code coverage is maintained
-- [ ] No linting errors
-- [ ] TypeScript compilation succeeds
-
-## 📄 License
-
-MIT License - see LICENSE file for details.
-
-## 🆘 Support
-
-For support and questions:
-
-- Create an issue on GitHub
-- Check the documentation
-- Review test examples
-
----
-
-**Built with ❤️ using Next.js 15, React 19, TypeScript, and Prisma**
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
+- [Hono Framework](https://hono.dev/)
+- [Prisma Documentation](https://www.prisma.io/docs)
