@@ -2,10 +2,16 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "weeziq-worker",
   "main": ".open-next/worker.js",
-  "compatibility_date": "2025-08-26",
+  "compatibility_date": "2025-08-16",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
+  },
+  "dev": {
+    "port": 8787
+  },
+  "durable_objects": {
+    "bindings": []
   }
 }
