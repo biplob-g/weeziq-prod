@@ -24,15 +24,12 @@ binding = "CHAT_STORAGE"
 id = "db2d575a44a54673a3d680a480077288"
 preview_id = "0f84fa40e273415abf246c92660cd7cf"
 
-# R2 bucket for file storage (optional)
-[[r2_buckets]]
-binding = "FILE_STORAGE"
-bucket_name = "weeziq-files"
+
 
 # Durable Objects migrations
 [[migrations]]
 tag = "v1"
-new_classes = ["ChatRoom", "VisitorTracker"]
+new_sqlite_classes = ["ChatRoom", "VisitorTracker"]
 
 # Environment variables (secrets)
 # These need to be set via wrangler secret put

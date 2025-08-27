@@ -299,7 +299,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\BIPLAB\\weeziq-test\\lib\\generated\\prisma",
+      "value": "C:\\Users\\BIPLAB\\weeziq-test\\apps\\nextjs-app\\lib\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -313,12 +313,11 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\BIPLAB\\weeziq-test\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\BIPLAB\\weeziq-test\\apps\\nextjs-app\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": "../../../.env",
-    "schemaEnvPath": "../../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "../../../prisma",
   "clientVersion": "6.14.0",

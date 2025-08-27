@@ -7,21 +7,16 @@ interface Env {
   CHAT_ROOM: DurableObjectNamespace;
   VISITOR_TRACKER: DurableObjectNamespace;
   CHAT_STORAGE?: KVNamespace;
-  FILE_STORAGE?: R2Bucket;
 }
 
 const app = new Hono<{ Bindings: Env }>();
 
 // Get allowed origins from environment or use defaults
-const getAllowedOrigins = () => {
-  const allowedOrigins = process.env.ALLOWED_ORIGINS;
-  if (allowedOrigins) {
-    return allowedOrigins.split(",").map((origin) => origin.trim());
-  }
-
-  // Default origins for development and production
+const getAllowedOrigins = (env: Env) => {
+  // In Cloudflare Workers, we'll use environment variables set via wrangler secret
+  // For now, return default origins
   return [
-    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+    "http://localhost:3000",
     "https://your-vercel-domain.vercel.app",
     "https://weeziq.com",
     "https://app.weeziq.com",
@@ -33,7 +28,10 @@ const getAllowedOrigins = () => {
 app.use(
   "*",
   cors({
-    origin: getAllowedOrigins(),
+    origin: (origin, c) => {
+      const allowedOrigins = getAllowedOrigins(c.env);
+      return allowedOrigins.includes(origin) ? origin : undefined;
+    },
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     credentials: true,
