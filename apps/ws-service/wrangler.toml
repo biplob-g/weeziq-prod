@@ -21,8 +21,8 @@ class_name = "VisitorTracker"
 # KV Namespace for storing visitor data and chat history
 [[kv_namespaces]]
 binding = "CHAT_STORAGE"
-id = "your-kv-namespace-id"
-preview_id = "your-preview-kv-namespace-id"
+id = "db2d575a44a54673a3d680a480077288"
+preview_id = "0f84fa40e273415abf246c92660cd7cf"
 
 # R2 bucket for file storage (optional)
 [[r2_buckets]]
