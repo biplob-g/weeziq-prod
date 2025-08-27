@@ -672,3 +672,7 @@ async function handleAIStream(data: any, ws: WebSocket, env: Env) {
 }
 
 export default app;
+
+// Export Durable Objects for Cloudflare Workers
+export { ChatRoom } from "./chat-room.js";
+export { VisitorTracker } from "./visitor-tracker.js";

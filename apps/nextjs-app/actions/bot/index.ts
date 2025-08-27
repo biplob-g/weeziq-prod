@@ -6,16 +6,12 @@ import { extractEmailsFromString, extractURLfromString } from "@/lib/utils";
 import { clerkClient } from "@clerk/nextjs/server";
 import { onMailer } from "../mailer";
 
-// OpenAI Import - Migrated from Gemini AI
-import OpenAI from "openai";
+// AI functionality moved to WebSocket service
+// OpenAI imports removed - AI responses are now handled by Cloudflare Worker
+// import OpenAI from "openai";
 import { onCheckAiCredits, onConsumeAiCredit } from "../settings";
 
-// Initialize OpenAI client with gpt-4o-mini model
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// AI Model Configuration
+// AI Model Configuration - moved to WebSocket service
 const GPT_4O = "gpt-4o";
 const GPT_4O_MINI = "gpt-4o-mini";
 
@@ -668,225 +664,218 @@ RULES:
           console.log(`🤖 Using ${finalModel}`);
         }
 
-        const result = await openai.chat.completions
-          .create({
-            model: finalModel,
-            messages: [
-              {
-                role: "system",
-                content: systemPrompt,
-              },
-              ...chat,
-              {
-                role: "user",
-                content: message,
-              },
-            ],
-          })
-          .catch(async (error) => {
-            // ✅ NEW: Fallback mechanism if GPT-4o fails
-            if (finalModel === GPT_4O) {
-              // ✅ FIXED: Reduced logging to prevent console spam
-              if (process.env.NODE_ENV === "development") {
-                console.log("⚠️ GPT-4o failed, falling back to gpt-4o-mini");
-              }
-              return await openai.chat.completions.create({
-                model: GPT_4O_MINI,
-                messages: [
-                  {
-                    role: "system",
-                    content: systemPrompt,
-                  },
-                  ...chat,
-                  {
-                    role: "user",
-                    content: message,
-                  },
-                ],
-              });
-            }
-            throw error;
+        // AI functionality moved to WebSocket service
+        // Call the WebSocket service for AI responses
+        const aiServiceUrl =
+          process.env.NEXT_PUBLIC_AI_API_URL || "http://localhost:8787";
+
+        try {
+          const response = await fetch(`${aiServiceUrl}/ai/chat`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              message,
+              userId: domainOwnerUser.id,
+              conversationId:
+                checkCustomer?.customer[0]?.chatRoom?.[0]?.id || null,
+              systemPrompt,
+              model: finalModel,
+            }),
           });
-        console.log(
-          "✅ OpenAI response received:",
-          result.choices[0].message.content
-        );
 
-        // ✅ Add null checks for OpenAI response
-        if (
-          !result ||
-          !result.choices ||
-          !result.choices[0] ||
-          !result.choices[0].message
-        ) {
-          console.error("❌ Invalid OpenAI response:", result);
-          throw new Error("Invalid response from OpenAI API");
-        }
-
-        const responseText = result.choices[0].message.content;
-        if (!responseText) {
-          console.error("❌ Empty response text from OpenAI");
-          throw new Error("Empty response from OpenAI API");
-        }
-
-        console.log("✅ OpenAI response text:", responseText);
-
-        // Estimate token usage (rough estimation: 4 characters per token)
-        const estimatedTokens = Math.ceil(
-          (fullPrompt.length + responseText.length) / 4
-        );
-        console.log(`📊 Estimated tokens used: ${estimatedTokens}`);
-
-        // Store the AI response message first to get the message ID
-        let chatMessageId: string | null = null;
-        if (checkCustomer?.customer[0]?.chatRoom?.[0]?.id) {
-          chatMessageId = await onStoreConversations(
-            checkCustomer.customer[0].chatRoom[0].id,
-            responseText,
-            "assistant"
-          );
-          console.log(
-            "✅ AI response stored in database with ID:",
-            chatMessageId
-          );
-        }
-
-        // ✅ NEW: Track AI usage with proper model differentiation
-        if (chatMessageId) {
-          // ✅ FIXED: Reduced logging to prevent console spam
-          if (process.env.NODE_ENV === "development") {
-            console.log(`💳 Tracking usage for ${finalModel}`);
+          if (!response.ok) {
+            throw new Error(`AI service error: ${response.status}`);
           }
 
-          // Create AI usage record with actual model used
-          await client.aiUsage.create({
-            data: {
-              chatMessageId,
-              modelUsed: finalModel,
-              tokensUsed: estimatedTokens,
-              creditsUsed:
-                finalModel === GPT_4O ? Math.ceil(estimatedTokens / 1000) : 0, // Only consume credits for GPT-4o
-              domainId: id,
-              userId: domainOwnerUser.id,
-            },
-          });
+          const result = await response.json();
+          const responseText = result.response || result.message;
 
-          // Only consume billing credits for GPT-4o (premium model)
-          if (finalModel === GPT_4O) {
-            await onConsumeAiCredit(
-              domainOwnerUser.id,
-              estimatedTokens,
-              id, // domainId
+          if (!responseText) {
+            console.error("❌ Empty response text from AI service");
+            throw new Error("Empty response from AI service");
+          }
+
+          console.log("✅ AI service response text:", responseText);
+
+          // Estimate token usage (rough estimation: 4 characters per token)
+          const estimatedTokens = Math.ceil(
+            (fullPrompt.length + responseText.length) / 4
+          );
+          console.log(`📊 Estimated tokens used: ${estimatedTokens}`);
+
+          // Store the AI response message first to get the message ID
+          let chatMessageId: string | null = null;
+          if (checkCustomer?.customer[0]?.chatRoom?.[0]?.id) {
+            chatMessageId = await onStoreConversations(
+              checkCustomer.customer[0].chatRoom[0].id,
+              responseText,
+              "assistant"
+            );
+            console.log(
+              "✅ AI response stored in database with ID:",
               chatMessageId
             );
           }
-        }
 
-        const chatCompletion = {
-          choices: [
-            {
-              message: {
-                content: responseText,
-              },
-            },
-          ],
-        };
+          // ✅ NEW: Track AI usage with proper model differentiation
+          if (chatMessageId) {
+            // ✅ FIXED: Reduced logging to prevent console spam
+            if (process.env.NODE_ENV === "development") {
+              console.log(`💳 Tracking usage for ${finalModel}`);
+            }
 
-        // ✅ Add null checks for chatCompletion structure
-        if (
-          !chatCompletion ||
-          !chatCompletion.choices ||
-          !chatCompletion.choices[0] ||
-          !chatCompletion.choices[0].message
-        ) {
-          console.error("❌ Invalid chatCompletion structure:", chatCompletion);
-          throw new Error("Invalid chat completion structure");
-        }
-
-        const messageContent = chatCompletion.choices[0].message.content;
-        if (!messageContent) {
-          console.error("❌ Empty message content in chatCompletion");
-          throw new Error("Empty message content from AI");
-        }
-
-        console.log("✅ Message content:", messageContent);
-
-        // ✅ FIXED: Always return response immediately, handle special cases after
-        const response = {
-          role: "assistant",
-          content: messageContent,
-        };
-
-        if (messageContent.includes("(realtime)")) {
-          const realtime = await client.chatRoom.update({
-            where: {
-              id: checkCustomer?.customer[0].chatRoom[0].id,
-            },
-            data: {
-              live: true,
-            },
-          });
-
-          if (realtime) {
-            // ✅ AI response already stored above, no need to store again
-            console.log("✅ Realtime mode activated, response already stored");
-
-            return {
-              response: {
-                ...response,
-                content: messageContent.replace("(realtime)", ""),
-              },
-            };
-          }
-        }
-        // ✅ FIXED: Handle completion logic but still return standard response
-        if (
-          chat &&
-          chat.length > 0 &&
-          chat[chat.length - 1] &&
-          chat[chat.length - 1].content &&
-          chat[chat.length - 1].content.includes("(complete)")
-        ) {
-          const firstUnansweredQuestion =
-            await client.customerResponses.findFirst({
-              where: {
-                customerId: checkCustomer?.customer[0].id,
-                answered: "",
-              },
-              select: {
-                id: true,
-              },
-              orderBy: {
-                question: "asc",
+            // Create AI usage record with actual model used
+            await client.aiUsage.create({
+              data: {
+                chatMessageId,
+                modelUsed: finalModel,
+                tokensUsed: estimatedTokens,
+                creditsUsed:
+                  finalModel === GPT_4O ? Math.ceil(estimatedTokens / 1000) : 0, // Only consume credits for GPT-4o
+                domainId: id,
+                userId: domainOwnerUser.id,
               },
             });
-          if (firstUnansweredQuestion) {
-            await client.customerResponses.update({
+
+            // Only consume billing credits for GPT-4o (premium model)
+            if (finalModel === GPT_4O) {
+              await onConsumeAiCredit(
+                domainOwnerUser.id,
+                estimatedTokens,
+                id, // domainId
+                chatMessageId
+              );
+            }
+          }
+
+          const chatCompletion = {
+            choices: [
+              {
+                message: {
+                  content: responseText,
+                },
+              },
+            ],
+          };
+
+          // ✅ Add null checks for chatCompletion structure
+          if (
+            !chatCompletion ||
+            !chatCompletion.choices ||
+            !chatCompletion.choices[0] ||
+            !chatCompletion.choices[0].message
+          ) {
+            console.error(
+              "❌ Invalid chatCompletion structure:",
+              chatCompletion
+            );
+            throw new Error("Invalid chat completion structure");
+          }
+
+          const messageContent = chatCompletion.choices[0].message.content;
+          if (!messageContent) {
+            console.error("❌ Empty message content in chatCompletion");
+            throw new Error("Empty message content from AI");
+          }
+
+          console.log("✅ Message content:", messageContent);
+
+          // ✅ FIXED: Always return response immediately, handle special cases after
+          const aiResponse = {
+            role: "assistant",
+            content: messageContent,
+          };
+
+          if (messageContent.includes("(realtime)")) {
+            const realtime = await client.chatRoom.update({
               where: {
-                id: firstUnansweredQuestion.id,
+                id: checkCustomer?.customer[0].chatRoom[0].id,
               },
               data: {
-                answered: message,
+                live: true,
               },
             });
+
+            if (realtime) {
+              // ✅ AI response already stored above, no need to store again
+              console.log(
+                "✅ Realtime mode activated, response already stored"
+              );
+
+              return {
+                response: {
+                  ...aiResponse,
+                  content: messageContent.replace("(realtime)", ""),
+                },
+              };
+            }
+          }
+          // ✅ FIXED: Handle completion logic but still return standard response
+          if (
+            chat &&
+            chat.length > 0 &&
+            chat[chat.length - 1] &&
+            chat[chat.length - 1].content &&
+            chat[chat.length - 1].content.includes("(complete)")
+          ) {
+            const firstUnansweredQuestion =
+              await client.customerResponses.findFirst({
+                where: {
+                  customerId: checkCustomer?.customer[0].id,
+                  answered: "",
+                },
+                select: {
+                  id: true,
+                },
+                orderBy: {
+                  question: "asc",
+                },
+              });
+            if (firstUnansweredQuestion) {
+              await client.customerResponses.update({
+                where: {
+                  id: firstUnansweredQuestion.id,
+                },
+                data: {
+                  answered: message,
+                },
+              });
+            }
+
+            // Check for generated links
+            const generatedLink = extractURLfromString(
+              messageContent as string
+            );
+            if (generatedLink) {
+              const link = generatedLink[0];
+              return {
+                response: {
+                  ...aiResponse,
+                  content: "Great! you can follow the link to proceed",
+                  link: link.slice(0, -1),
+                },
+              };
+            }
           }
 
-          // Check for generated links
-          const generatedLink = extractURLfromString(messageContent as string);
-          if (generatedLink) {
-            const link = generatedLink[0];
-            return {
-              response: {
-                ...response,
-                content: "Great! you can follow the link to proceed",
-                link: link.slice(0, -1),
-              },
-            };
+          // ✅ FIXED: Standard response pathway for all cases
+          return { response: aiResponse };
+        } catch (aiError) {
+          console.error("❌ AI Service Error:", aiError);
+          if (aiError instanceof Error) {
+            if (aiError.message.includes("AI service error")) {
+              return { error: `AI Error: ${aiError.message}` };
+            } else if (aiError.message.includes("Empty response")) {
+              return { error: "AI Error: Empty response from AI service" };
+            } else {
+              return { error: `AI Error: ${aiError.message}` };
+            }
+          } else {
+            return { error: "AI Error: An unexpected error occurred" };
           }
         }
-
-        // ✅ FIXED: Standard response pathway for all cases
-        return { response };
       }
 
       console.log(
@@ -984,130 +973,115 @@ RULES:
         console.log(`🤖 Using ${finalModel} (no customer)`);
       }
 
-      const result = await openai.chat.completions
-        .create({
-          model: finalModel,
-          messages: [
+      // AI functionality moved to WebSocket service
+      // Call the WebSocket service for AI responses
+      const aiServiceUrl =
+        process.env.NEXT_PUBLIC_AI_API_URL || "http://localhost:8787";
+
+      try {
+        const response = await fetch(`${aiServiceUrl}/ai/chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message,
+            userId: chatBotDomain.User.id,
+            conversationId: null, // No customer path
+            systemPrompt,
+            model: finalModel,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`AI service error: ${response.status}`);
+        }
+
+        const result = await response.json();
+        const responseText = result.response || result.message;
+
+        if (!responseText) {
+          console.error("❌ Empty response text from AI service");
+          throw new Error("Empty response from AI service");
+        }
+
+        console.log("✅ AI service response text:", responseText);
+
+        // Estimate token usage (rough estimation: 4 characters per token)
+        const estimatedTokens = Math.ceil(
+          (fullPrompt.length + responseText.length) / 4
+        );
+        console.log(
+          `📊 Estimated tokens used (no customer): ${estimatedTokens}`
+        );
+
+        // ✅ NEW: Track AI usage for no-customer path with proper model differentiation
+        // ✅ FIXED: Reduced logging to prevent console spam
+        if (process.env.NODE_ENV === "development") {
+          console.log(`💳 Tracking usage for ${finalModel} (no customer)`);
+        }
+
+        // Create AI usage record
+        await client.aiUsage.create({
+          data: {
+            chatMessageId: "temp-no-customer", // temporary placeholder
+            modelUsed: finalModel,
+            tokensUsed: estimatedTokens,
+            creditsUsed:
+              finalModel === GPT_4O ? Math.ceil(estimatedTokens / 1000) : 0,
+            domainId: id,
+            userId: chatBotDomain.User.id,
+          },
+        });
+
+        // Only consume billing credits for GPT-4o (no customer path)
+        if (finalModel === GPT_4O) {
+          await onConsumeAiCredit(
+            chatBotDomain.User.id,
+            estimatedTokens,
+            id, // domainId
+            "temp-no-customer" // temporary placeholder for chat message ID
+          );
+        }
+
+        const chatCompletion = {
+          choices: [
             {
-              role: "system",
-              content: systemPrompt,
-            },
-            ...chat,
-            {
-              role: "user",
-              content: message,
+              message: {
+                content: responseText,
+              },
             },
           ],
-        })
-        .catch(async (error) => {
-          // ✅ NEW: Fallback mechanism for no-customer path
-          if (finalModel === GPT_4O) {
-            // ✅ FIXED: Reduced logging to prevent console spam
-            if (process.env.NODE_ENV === "development") {
-              console.log(
-                "⚠️ GPT-4o failed, falling back to gpt-4o-mini (no customer)"
-              );
-            }
-            return await openai.chat.completions.create({
-              model: GPT_4O_MINI,
-              messages: [
-                {
-                  role: "system",
-                  content: systemPrompt,
-                },
-                ...chat,
-                {
-                  role: "user",
-                  content: message,
-                },
-              ],
-            });
-          }
-          throw error;
-        });
-      console.log(
-        "✅ OpenAI response received:",
-        result.choices[0].message.content
-      );
-
-      // ✅ Add null checks for OpenAI response
-      if (
-        !result ||
-        !result.choices ||
-        !result.choices[0] ||
-        !result.choices[0].message
-      ) {
-        console.error("❌ Invalid OpenAI response:", result);
-        throw new Error("Invalid response from OpenAI API");
-      }
-
-      const responseText = result.choices[0].message.content;
-      if (!responseText) {
-        console.error("❌ Empty response text from OpenAI");
-        throw new Error("Empty response from OpenAI API");
-      }
-
-      console.log("✅ OpenAI response text:", responseText);
-
-      // Estimate token usage (rough estimation: 4 characters per token)
-      const estimatedTokens = Math.ceil(
-        (fullPrompt.length + responseText.length) / 4
-      );
-      console.log(`📊 Estimated tokens used (no customer): ${estimatedTokens}`);
-
-      // ✅ NEW: Track AI usage for no-customer path with proper model differentiation
-      // ✅ FIXED: Reduced logging to prevent console spam
-      if (process.env.NODE_ENV === "development") {
-        console.log(`💳 Tracking usage for ${finalModel} (no customer)`);
-      }
-
-      // Create AI usage record
-      await client.aiUsage.create({
-        data: {
-          chatMessageId: "temp-no-customer", // temporary placeholder
-          modelUsed: finalModel,
-          tokensUsed: estimatedTokens,
-          creditsUsed:
-            finalModel === GPT_4O ? Math.ceil(estimatedTokens / 1000) : 0,
-          domainId: id,
-          userId: chatBotDomain.User.id,
-        },
-      });
-
-      // Only consume billing credits for GPT-4o (no customer path)
-      if (finalModel === GPT_4O) {
-        await onConsumeAiCredit(
-          chatBotDomain.User.id,
-          estimatedTokens,
-          id, // domainId
-          "temp-no-customer" // temporary placeholder for chat message ID
-        );
-      }
-
-      const chatCompletion = {
-        choices: [
-          {
-            message: {
-              content: responseText,
-            },
-          },
-        ],
-      };
-
-      if (
-        chatCompletion &&
-        chatCompletion.choices &&
-        chatCompletion.choices[0]
-      ) {
-        const response = {
-          role: "assistant",
-          content: chatCompletion.choices[0].message.content,
         };
-        console.log("✅ Returning AI response:", response);
-        return { response };
-      } else {
-        console.error("❌ Invalid chatCompletion structure:", chatCompletion);
-        throw new Error("Invalid chat completion structure");
+
+        if (
+          chatCompletion &&
+          chatCompletion.choices &&
+          chatCompletion.choices[0]
+        ) {
+          const aiResponse = {
+            role: "assistant",
+            content: chatCompletion.choices[0].message.content,
+          };
+          console.log("✅ Returning AI response:", aiResponse);
+          return { response: aiResponse };
+        } else {
+          console.error("❌ Invalid chatCompletion structure:", chatCompletion);
+          throw new Error("Invalid chat completion structure");
+        }
+      } catch (aiError) {
+        console.error("❌ AI Service Error (no customer):", aiError);
+        if (aiError instanceof Error) {
+          if (aiError.message.includes("AI service error")) {
+            return { error: `AI Error: ${aiError.message}` };
+          } else if (aiError.message.includes("Empty response")) {
+            return { error: "AI Error: Empty response from AI service" };
+          } else {
+            return { error: `AI Error: ${aiError.message}` };
+          }
+        } else {
+          return { error: "AI Error: An unexpected error occurred" };
+        }
       }
     }
   } catch (error) {
