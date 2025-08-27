@@ -20,6 +20,11 @@ class SocketClient {
   private reconnectDelay = 1000;
 
   constructor() {
+    // Don't initialize during build time
+    if (typeof window === "undefined") {
+      return;
+    }
+
     // Use Cloudflare WebSocket client for production, Socket.io for local development
     if (process.env.NODE_ENV === "development") {
       this.initializeSocketIO();
@@ -33,7 +38,7 @@ class SocketClient {
   private initializeSocketIO() {
     try {
       const socketUrl =
-        process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8787";
+        process.env.NEXT_PUBLIC_WS_URL || "http://localhost:8787";
 
       this.socket = io(socketUrl, {
         transports: ["websocket", "polling"],
@@ -544,7 +549,14 @@ class SocketClient {
   }
 }
 
-// Create singleton instance
-const socketClient = new SocketClient();
+// Create singleton instance with lazy loading
+let socketClientInstance: SocketClient | null = null;
 
-export default socketClient;
+const getSocketClient = () => {
+  if (!socketClientInstance) {
+    socketClientInstance = new SocketClient();
+  }
+  return socketClientInstance;
+};
+
+export default getSocketClient();

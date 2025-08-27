@@ -18,6 +18,11 @@ class CloudflareSocketClient {
   private eventListeners: Map<string, GenericCallback[]> = new Map();
 
   constructor() {
+    // Don't initialize during build time
+    if (typeof window === "undefined") {
+      return;
+    }
+
     this.initializeSocket();
   }
 
@@ -25,7 +30,7 @@ class CloudflareSocketClient {
     try {
       const wsUrl =
         process.env.NEXT_PUBLIC_WS_URL ||
-        "wss://your-cloudflare-worker.your-subdomain.workers.dev/ws";
+        "wss://weeziq-ws-service.ghatakbits.workers.dev/ws";
 
       this.ws = new WebSocket(wsUrl);
       this.setupEventListeners();
