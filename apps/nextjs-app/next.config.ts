@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Remove standalone output for Vercel deployment
+  // output: "standalone",
   serverExternalPackages: ["@prisma/client"],
 
   images: {
