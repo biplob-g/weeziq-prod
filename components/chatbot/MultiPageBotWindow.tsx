@@ -193,7 +193,9 @@ const MultiPageBotWindow = forwardRef<HTMLDivElement, MultiPageBotWindowProps>(
                 pageState.pageData.landing.hasPreviousMessages
               }
               customerName={pageState.pageData.landing.customerName}
-              onNavigateToPage={onNavigateToPage}
+              onNavigateToPage={(page: string) =>
+                onNavigateToPage(page as ChatbotPage)
+              }
               onStartNewChat={() => {
                 onStartNewChat?.();
               }}

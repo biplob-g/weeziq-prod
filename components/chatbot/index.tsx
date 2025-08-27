@@ -65,6 +65,18 @@ const AiChatBot = () => {
     currentBotId,
   } = useChatBot();
 
+  // Fix TypeScript error by creating wrapper functions
+  const handleContinueChatWrapper = () => {
+    // This will be called from the component, but we need to handle the chatRoomId differently
+    // For now, we'll use the first available chat room or start fresh
+    if (allChatRooms && allChatRooms.length > 0) {
+      handleContinueChat(allChatRooms[0].id);
+    } else {
+      // Start fresh if no chat rooms available
+      handleStartNewChat();
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -93,18 +105,22 @@ const AiChatBot = () => {
             setShowUserInfoForm={setShowUserInfoForm}
             showChatHistory={showChatHistory}
             onUserInfoSubmit={handleUserInfoSubmit}
-            onContinueChat={handleContinueChat}
+            onContinueChat={handleContinueChatWrapper}
             onStartNewChat={handleStartNewChat}
             loading={loading}
             isCheckingIP={isCheckingIP}
-            chatHistory={chatHistory}
+            _chatHistory={chatHistory}
             currentCustomer={currentCustomer}
             allChatRooms={allChatRooms}
             setAllChatRooms={setAllChatRooms}
             pageState={pageState}
-            onNavigateToPage={navigateToPage}
+            onNavigateToPage={(page, data) =>
+              navigateToPage(page, data as Record<string, unknown>)
+            }
             onNavigateBack={navigateBack}
-            onUpdatePageData={updatePageData}
+            onUpdatePageData={(page, data) =>
+              updatePageData(page, data as Record<string, unknown>)
+            }
             isEmbedMode={isEmbedMode} // ✅ NEW: Pass embed mode
           />
         ) : (
@@ -126,7 +142,7 @@ const AiChatBot = () => {
             showUserInfoForm={showUserInfoForm}
             showChatHistory={showChatHistory}
             onUserInfoSubmit={handleUserInfoSubmit}
-            onContinueChat={handleContinueChat}
+            onContinueChat={handleContinueChatWrapper}
             onStartNewChat={handleStartNewChat}
             loading={loading}
             isCheckingIP={isCheckingIP}

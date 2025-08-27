@@ -45,6 +45,16 @@ const missingFiles = [
     {
         path: '.next/server/app/css-manifest.json',
         content: '{}'
+    },
+    // CSS build manifest
+    {
+        path: '.next/server/app/css-build-manifest.json',
+        content: '{}'
+    },
+    // CSS entry files manifest
+    {
+        path: '.next/server/app/css-entry-files.json',
+        content: '{"entryCSSFiles":[]}'
     }
 ];
 

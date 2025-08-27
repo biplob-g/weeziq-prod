@@ -42,7 +42,7 @@ export type ChangePasswordProps = {
   confirmPassword: string;
 };
 
-export const ChangePasswordSchema: ZodType<ChangePasswordProps> = z
+export const ChangePasswordSchema = z
   .object({
     password: z
       .string()
@@ -66,7 +66,7 @@ export type UserLoginProps = {
   password: string;
 };
 
-export const UserLoginSchema: ZodType<UserLoginProps> = z.object({
+export const UserLoginSchema = z.object({
   email: z.string().email({ message: "You did not enter a valid email" }),
   password: z
     .string()

@@ -1,8 +1,5 @@
 @import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
-@import "tw-animate-css";
-
-@custom-variant dark (&:is(.dark *));
 
 @theme {
   /* Font configuration */
@@ -10,10 +7,7 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
   /* Custom font sizes for desktop */
-  --font-size-sm: 16px !important;
-
-  --color-sidebar: #24252d;
-  --color-sidebar-light: #ede3f4;
+  --font-size-sm: 16px;
 
   /* Radius values */
   --radius-sm: 0.125rem;
@@ -23,71 +17,74 @@
   --radius-xl: 0.75rem;
 
   /* Light theme colors */
-  --color-background: #edf6f9;
-  --color-foreground: #020817;
-  --color-muted: #f1f5f9;
-  --color-muted-foreground: #64748b;
-  --color-card: #ffffff;
-  --color-card-foreground: #020817;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #020817;
-  --color-primary: #7c46e6;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #e2e8f0;
-  --color-secondary-foreground: #020817;
-  --color-accent: #f1f5f9;
-  --color-accent-foreground: #020817;
-  --color-border: #e2e8f0;
-  --color-ring: #7c46e6;
-}
-
-/* Root theme variables - light mode defaults */
-:root {
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-
-  /* Custom font sizes for desktop */
-  --font-size-sm: 18px;
-
-  /* Light Theme Colors */
   --color-background: #ffffff;
   --color-foreground: #020817;
-
   --color-muted: #f1f5f9;
   --color-muted-foreground: #64748b;
-  --color-muted-foreground-light: #7c8b9a;
-  --color-muted-foreground-dark: #4a5568;
-
   --color-card: #ffffff;
   --color-card-foreground: #020817;
-
   --color-popover: #ffffff;
   --color-popover-foreground: #020817;
-
-  /* Primary Accent Colors - Purple Theme */
   --color-primary: #7c46e6;
   --color-primary-foreground: #ffffff;
-  --color-primary-dark: #6b37d6;
-  --color-primary-light: #e6d9ff;
-
-  /* Secondary Accent Colors */
   --color-secondary: #e2e8f0;
   --color-secondary-foreground: #020817;
-
   --color-accent: #f1f5f9;
   --color-accent-foreground: #020817;
-
   --color-border: #e2e8f0;
-  --color-border-light: #e2e8f0;
-  --color-border-dark: #cbd5e1;
-
   --color-ring: #7c46e6;
 
-  --radius-sm: 0.125rem;
-  --radius: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
+  /* Custom animations */
+  --animate-meteor: meteor 5s linear infinite;
+}
+
+/* Dark theme colors with @media - moved outside @theme block */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #000000;
+    --color-foreground: #e7eceb;
+    --color-muted: #27272a;
+    --color-muted-foreground: oklch(0.7 0.02 160);
+    --color-card: oklch(0.05 0.02 220);
+    --color-card-foreground: #e7eceb;
+    --color-popover: #0f1211;
+    --color-popover-foreground: #e7eceb;
+    --color-primary: #7c46e6;
+    --color-primary-foreground: #ffffff;
+    --color-secondary: #e7eceb;
+    --color-secondary-foreground: #141a18;
+    --color-accent: #3f3f42;
+    --color-accent-foreground: #f4f4f5;
+    --color-border: oklch(1 0 0 / 0.08);
+    --color-ring: #7c46e6;
+  }
+}
+
+/* Keyframes for meteor animation */
+@keyframes meteor {
+  0% {
+    transform: rotate(var(--angle)) translateX(0);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--angle)) translateX(-500px);
+    opacity: 0;
+  }
+}
+
+/* Root variables for additional custom properties */
+:root {
+  /* Additional custom properties not in @theme */
+  --font-size-sm-desktop: 18px;
+  --color-muted-foreground-light: #7c8b9a;
+  --color-muted-foreground-dark: #4a5568;
+  --color-primary-dark: #6b37d6;
+  --color-primary-light: #e6d9ff;
+  --color-border-light: #e2e8f0;
+  --color-border-dark: #cbd5e1;
 
   /* Sidebar Variables */
   --sidebar: #ffffff;
@@ -98,6 +95,8 @@
   --sidebar-accent-foreground: #020817;
   --sidebar-width: 16rem;
   --sidebar-width-icon: 4rem;
+  --color-sidebar: #24252d;
+  --color-sidebar-light: #ede3f4;
 
   /* Theme transition */
   --theme-transition: background-color 0.3s ease, color 0.3s ease,
@@ -108,35 +107,25 @@
 .dark {
   --color-background: #000000;
   --color-foreground: #e7eceb;
-
   --color-muted: #27272a;
   --color-muted-foreground: oklch(0.7 0.02 160);
   --color-muted-foreground-light: oklch(0.6 0.02 160);
   --color-muted-foreground-dark: oklch(0.65 0.02 160);
-
   --color-card: oklch(0.05 0.02 220);
   --color-card-foreground: #e7eceb;
-
   --color-popover: #0f1211;
   --color-popover-foreground: #e7eceb;
-
-  /* Primary Accent Colors - Purple Theme */
   --color-primary: #7c46e6;
   --color-primary-foreground: #ffffff;
   --color-primary-dark: #6b37d6;
   --color-primary-light: #e6d9ff;
-
-  /* Secondary Accent Colors */
   --color-secondary: #e7eceb;
   --color-secondary-foreground: #141a18;
-
   --color-accent: #3f3f42;
   --color-accent-foreground: #f4f4f5;
-
   --color-border: oklch(1 0 0 / 0.08);
   --color-border-light: oklch(0.1 0.02 210 / 0.1);
   --color-border-dark: oklch(0.05 0.02 210 / 0.05);
-
   --color-ring: #7c46e6;
 
   /* Sidebar Variables */
@@ -146,8 +135,6 @@
   --sidebar-ring: #7c46e6;
   --sidebar-accent: #3f3f42;
   --sidebar-accent-foreground: #f4f4f5;
-  --sidebar-width: 16rem;
-  --sidebar-width-icon: 4rem;
 }
 
 /* System preference based dark mode - only applies if no .dark class is present */
@@ -155,35 +142,25 @@
   :root:not(.light) {
     --color-background: #000000;
     --color-foreground: #e7eceb;
-
     --color-muted: #27272a;
     --color-muted-foreground: oklch(0.7 0.02 160);
     --color-muted-foreground-light: oklch(0.6 0.02 160);
     --color-muted-foreground-dark: oklch(0.65 0.02 160);
-
     --color-card: oklch(0.05 0.02 220);
     --color-card-foreground: #e7eceb;
-
     --color-popover: #0f1211;
     --color-popover-foreground: #e7eceb;
-
-    /* Primary Accent Colors - Purple Theme */
     --color-primary: #7c46e6;
     --color-primary-foreground: #ffffff;
     --color-primary-dark: #6b37d6;
     --color-primary-light: #e6d9ff;
-
-    /* Secondary Accent Colors */
     --color-secondary: #e7eceb;
     --color-secondary-foreground: #141a18;
-
     --color-accent: #3f3f42;
     --color-accent-foreground: #f4f4f5;
-
     --color-border: oklch(1 0 0 / 0.08);
     --color-border-light: oklch(0.1 0.02 210 / 0.1);
     --color-border-dark: oklch(0.05 0.02 210 / 0.05);
-
     --color-ring: #7c46e6;
 
     /* Sidebar Variables */
@@ -193,8 +170,6 @@
     --sidebar-ring: #7c46e6;
     --sidebar-accent: #3f3f42;
     --sidebar-accent-foreground: #f4f4f5;
-    --sidebar-width: 16rem;
-    --sidebar-width-icon: 4rem;
   }
 }
 
@@ -575,30 +550,16 @@
   .dark [data-slot="sidebar-inner"] {
     background-color: var(--sidebar) !important;
   }
-}
 
-@theme inline {
-  --animate-meteor: meteor 5s linear infinite;
-  @keyframes meteor {
-    0% {
-      transform: rotate(var(--angle)) translateX(0);
-      opacity: 1;
-    }
-    70% {
-      opacity: 1;
-    }
-    100% {
-      transform: rotate(var(--angle)) translateX(-500px);
-      opacity: 0;
-    }
+  /* Meteor animation utility class */
+  .animate-meteor {
+    animation: var(--animate-meteor);
   }
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
+/* Final layer for Tailwind utilities and overrides */
+@layer utilities {
+  .outline-ring\/50 {
+    outline-color: oklch(from var(--color-ring) l c h / 0.5);
   }
 }

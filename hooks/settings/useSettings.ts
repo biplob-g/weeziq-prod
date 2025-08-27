@@ -49,7 +49,6 @@ export const useChangePassword = () => {
     formState: { errors },
     reset,
   } = useForm<ChangePasswordProps>({
-    // @ts-expect-error - Type compatibility issue between Zod and React Hook Form resolver
     resolver: zodResolver(ChangePasswordSchema),
     mode: "onChange",
   });

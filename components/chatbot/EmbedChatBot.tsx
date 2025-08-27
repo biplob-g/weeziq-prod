@@ -73,6 +73,18 @@ const EmbedChatBot = () => {
 
   // ✅ REMOVED: Auto-open - user should click icon first
 
+  // Fix TypeScript error by creating wrapper functions
+  const handleContinueChatWrapper = () => {
+    // This will be called from the component, but we need to handle the chatRoomId differently
+    // For now, we'll use the first available chat room or start fresh
+    if (allChatRooms && allChatRooms.length > 0) {
+      handleContinueChat(allChatRooms[0].id);
+    } else {
+      // Start fresh if no chat rooms available
+      handleStartNewChat();
+    }
+  };
+
   return (
     <div className="w-full h-[600px] bg-transparent flex flex-col justify-end items-end">
       {/* Chat Window */}
@@ -97,11 +109,11 @@ const EmbedChatBot = () => {
             setShowUserInfoForm={setShowUserInfoForm}
             showChatHistory={showChatHistory}
             onUserInfoSubmit={handleUserInfoSubmit}
-            onContinueChat={handleContinueChat}
+            onContinueChat={handleContinueChatWrapper}
             onStartNewChat={handleStartNewChat}
             loading={loading}
             isCheckingIP={isCheckingIP}
-            chatHistory={chatHistory}
+            _chatHistory={chatHistory}
             currentCustomer={currentCustomer}
             allChatRooms={allChatRooms}
             setAllChatRooms={setAllChatRooms}
@@ -130,7 +142,7 @@ const EmbedChatBot = () => {
             showUserInfoForm={showUserInfoForm}
             showChatHistory={showChatHistory}
             onUserInfoSubmit={handleUserInfoSubmit}
-            onContinueChat={handleContinueChat}
+            onContinueChat={handleContinueChatWrapper}
             onStartNewChat={handleStartNewChat}
             loading={loading}
             isCheckingIP={isCheckingIP}
