@@ -11,7 +11,7 @@
     "build:cloudflare": "npx @opennextjs/cloudflare build",
     "build:cloudflare-alt": "npx @opennextjs/cloudflare build --skipWranglerConfigCheck",
     "build:standard": "next build",
-    "build:cf": "npm run build && npx @opennextjs/cloudflare build",
+    "build:cf": "npm run build && npx @opennextjs/cloudflare build --skipNextBuild",
     "preview:worker": "npm run build:cloudflare && wrangler dev --port 8771",
     "deploy": "npm run build:cloudflare && wrangler deploy",
     "upload": "npx @opennextjs/cloudflare build && npx @opennextjs/cloudflare upload",

@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "weeziq-worker",
-  "main": ".open-next/cloudflare/init.js",
+  "main": ".open-next/worker.js",
   "compatibility_date": "2025-08-26",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
