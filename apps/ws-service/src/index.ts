@@ -272,3 +272,6 @@ function handlePing(ws: WebSocket) {
 }
 
 export default app;
+
+// Export placeholder classes for migration
+export { ChatRoom, VisitorTracker } from "./placeholder-classes.js";

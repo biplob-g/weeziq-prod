@@ -9,6 +9,8 @@ main = "src/index.ts"
 [vars]
 NODE_ENV = "production"
 
+
+
 # Environment variables (secrets)
 # These need to be set via wrangler secret put
 # - OPENAI_API_KEY
