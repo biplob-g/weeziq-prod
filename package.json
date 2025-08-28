@@ -17,7 +17,8 @@
     "install:all": "npm install && cd apps/nextjs-app && npm install && cd ../ws-service && npm install",
     "clean": "npm run clean:next && npm run clean:ws",
     "clean:next": "cd apps/nextjs-app && rm -rf .next node_modules",
-    "clean:ws": "cd apps/ws-service && rm -rf .wrangler node_modules"
+    "clean:ws": "cd apps/ws-service && rm -rf .wrangler node_modules",
+    "vercel-build": "cd apps/nextjs-app && npm run build"
   },
   "devDependencies": {
     "concurrently": "^9.2.0",
