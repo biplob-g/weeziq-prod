@@ -9,28 +9,6 @@ main = "src/index.ts"
 [vars]
 NODE_ENV = "production"
 
-# Durable Objects for WebSocket connections and chat rooms
-[[durable_objects.bindings]]
-name = "CHAT_ROOM"
-class_name = "ChatRoom"
-
-[[durable_objects.bindings]]
-name = "VISITOR_TRACKER"
-class_name = "VisitorTracker"
-
-# KV Namespace for storing visitor data and chat history
-[[kv_namespaces]]
-binding = "CHAT_STORAGE"
-id = "db2d575a44a54673a3d680a480077288"
-preview_id = "0f84fa40e273415abf246c92660cd7cf"
-
-
-
-# Durable Objects migrations
-[[migrations]]
-tag = "v1"
-new_sqlite_classes = ["ChatRoom", "VisitorTracker"]
-
 # Environment variables (secrets)
 # These need to be set via wrangler secret put
 # - OPENAI_API_KEY

@@ -4,20 +4,23 @@ import { AIHandler } from "./ai-handler.js";
 
 // Define environment types for Cloudflare Workers
 interface Env {
-  CHAT_ROOM: DurableObjectNamespace;
-  VISITOR_TRACKER: DurableObjectNamespace;
-  CHAT_STORAGE?: KVNamespace;
+  OPENAI_API_KEY?: string;
+  GOOGLE_AI_API_KEY?: string;
+  ALLOWED_ORIGINS?: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Get allowed origins from environment or use defaults
+// Get allowed origins from environment
 const getAllowedOrigins = (env: Env) => {
-  // In Cloudflare Workers, we'll use environment variables set via wrangler secret
-  // For now, return default origins
+  if (env.ALLOWED_ORIGINS) {
+    return env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim());
+  }
+
+  // Fallback to common origins including localhost for development
   return [
     "http://localhost:3000",
-    "https://your-vercel-domain.vercel.app",
+    "http://localhost:3001",
     "https://weeziq.com",
     "https://app.weeziq.com",
     "https://*.vercel.app",
@@ -48,7 +51,7 @@ app.get("/", (c) => {
   });
 });
 
-// WebSocket upgrade endpoint with Durable Object integration
+// WebSocket upgrade endpoint
 app.get("/ws", async (c) => {
   const upgradeHeader = c.req.header("Upgrade");
 
@@ -68,52 +71,35 @@ app.get("/ws", async (c) => {
 
       // Handle different message types
       switch (data.type) {
-        case "join-room":
-          await handleJoinRoom(data, server, c.env);
-          break;
         case "send-message":
           await handleSendMessage(data, server, c.env);
           break;
         case "typing-start":
-          await handleTypingStart(data, server, c.env);
+          handleTypingStart(data, server);
           break;
         case "typing-stop":
-          await handleTypingStop(data, server, c.env);
+          handleTypingStop(data, server);
           break;
-        case "user-online":
-          await handleUserOnline(data, server, c.env);
-          break;
-        case "visitor-joined-domain":
-          await handleVisitorJoinedDomain(data, server, c.env);
-          break;
-        case "visitor-left-domain":
-          await handleVisitorLeftDomain(data, server, c.env);
-          break;
-        case "visitor-activity":
-          await handleVisitorActivity(data, server, c.env);
-          break;
-        case "get-domain-stats":
-          await handleGetDomainStats(data, server, c.env);
-          break;
-        case "get-all-domain-stats":
-          await handleGetAllDomainStats(server, c.env);
-          break;
-        case "customer-joined-room":
-          await handleCustomerJoinedRoom(data, server, c.env);
-          break;
-        case "ai-chat":
-          await handleAIChat(data, server, c.env);
-          break;
-        case "ai-stream":
-          await handleAIStream(data, server, c.env);
+        case "ping":
+          handlePing(server);
           break;
         default:
-          server.send(JSON.stringify({ error: "Unknown message type" }));
+          server.send(
+            JSON.stringify({
+              type: "error",
+              message: "Unknown message type",
+              timestamp: new Date().toISOString(),
+            })
+          );
       }
     } catch (error) {
       console.error("WebSocket message error:", error);
       server.send(
-        JSON.stringify({ error: "Invalid JSON or processing error" })
+        JSON.stringify({
+          type: "error",
+          message: "Invalid message format",
+          timestamp: new Date().toISOString(),
+        })
       );
     }
   });
@@ -122,43 +108,68 @@ app.get("/ws", async (c) => {
     console.log("WebSocket connection closed");
   });
 
+  server.addEventListener("error", (error) => {
+    console.error("WebSocket error:", error);
+  });
+
   return new Response(null, {
     status: 101,
     webSocket: client,
   });
 });
 
-// AI streaming endpoint
-app.post("/ai/stream", async (c) => {
+// AI chat endpoint
+app.post("/ai/chat", async (c) => {
   try {
     const body = await c.req.json();
-    const {
-      message,
-      model = "gpt-3.5-turbo",
-      domainId,
-      userId,
-      conversationId,
-    } = body;
+    const { message, conversationId, domainId, userId } = body;
 
     if (!message) {
       return c.json({ error: "Message is required" }, 400);
     }
 
-    // Create a streaming response
+    const aiHandler = new AIHandler();
+    const response = await aiHandler.getResponse(
+      message,
+      "gpt-3.5-turbo",
+      domainId,
+      userId,
+      conversationId
+    );
+
+    return c.json(response);
+  } catch (error) {
+    console.error("AI chat error:", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+// AI streaming endpoint
+app.post("/ai/stream", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { message, conversationId, domainId, userId } = body;
+
+    if (!message) {
+      return c.json({ error: "Message is required" }, 400);
+    }
+
+    const aiHandler = new AIHandler();
+
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          const aiHandler = new AIHandler();
           await aiHandler.streamResponse(
             message,
-            model,
+            "gpt-3.5-turbo",
             domainId,
             controller,
             userId,
             conversationId
           );
+          controller.close();
         } catch (error) {
-          console.error("AI streaming error:", error);
+          console.error("Streaming error:", error);
           controller.error(error);
         }
       },
@@ -172,505 +183,92 @@ app.post("/ai/stream", async (c) => {
       },
     });
   } catch (error) {
+    console.error("AI stream error:", error);
     return c.json({ error: "Internal server error" }, 500);
   }
 });
 
-// AI chat endpoint (non-streaming)
-app.post("/ai/chat", async (c) => {
-  try {
-    const body = await c.req.json();
-    const {
-      message,
-      model = "gpt-3.5-turbo",
-      domainId,
-      userId,
-      conversationId,
-    } = body;
-
-    if (!message) {
-      return c.json({ error: "Message is required" }, 400);
-    }
-
-    const aiHandler = new AIHandler();
-    const response = await aiHandler.getResponse(
-      message,
-      model,
-      domainId,
-      userId,
-      conversationId
-    );
-
-    return c.json(response);
-  } catch (error) {
-    console.error("AI chat error:", error);
-    return c.json({ error: "Internal server error" }, 500);
-  }
-});
-
-// Visitor tracking endpoints
-app.post("/visitors/add", async (c) => {
-  try {
-    const body = await c.req.json();
-    const { domainId, visitorId, visitorData } = body;
-
-    if (!domainId || !visitorId) {
-      return c.json({ error: "Missing required fields" }, 400);
-    }
-
-    const visitorTracker = c.env.VISITOR_TRACKER.get(
-      c.env.VISITOR_TRACKER.idFromName(domainId)
-    );
-    const response = await visitorTracker.fetch(
-      new Request("http://localhost/visitors/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domainId, visitorId, visitorData }),
-      })
-    );
-
-    const result = (await response.json()) as any;
-    return c.json(result);
-  } catch (error) {
-    console.error("Error adding visitor:", error);
-    return c.json({ error: "Internal server error" }, 500);
-  }
-});
-
-app.post("/visitors/remove", async (c) => {
-  try {
-    const body = await c.req.json();
-    const { domainId, visitorId } = body;
-
-    if (!domainId || !visitorId) {
-      return c.json({ error: "Missing required fields" }, 400);
-    }
-
-    const visitorTracker = c.env.VISITOR_TRACKER.get(
-      c.env.VISITOR_TRACKER.idFromName(domainId)
-    );
-    const response = await visitorTracker.fetch(
-      new Request("http://localhost/visitors/remove", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domainId, visitorId }),
-      })
-    );
-
-    const result = (await response.json()) as any;
-    return c.json(result);
-  } catch (error) {
-    console.error("Error removing visitor:", error);
-    return c.json({ error: "Internal server error" }, 500);
-  }
-});
-
-app.get("/stats/domain/:domainId", async (c) => {
-  try {
-    const domainId = c.req.param("domainId");
-
-    if (!domainId) {
-      return c.json({ error: "Missing domainId parameter" }, 400);
-    }
-
-    const visitorTracker = c.env.VISITOR_TRACKER.get(
-      c.env.VISITOR_TRACKER.idFromName(domainId)
-    );
-    const response = await visitorTracker.fetch(
-      new Request(`http://localhost/stats/domain?domainId=${domainId}`)
-    );
-
-    const result = (await response.json()) as any;
-    return c.json(result);
-  } catch (error) {
-    console.error("Error getting domain stats:", error);
-    return c.json({ error: "Internal server error" }, 500);
-  }
-});
-
-// WebSocket message handlers with Durable Object integration
-async function handleJoinRoom(data: any, ws: WebSocket, env: Env) {
-  const { roomId, userId, userName } = data;
-
-  try {
-    const chatRoom = env.CHAT_ROOM.get(env.CHAT_ROOM.idFromName(roomId));
-    const response = await chatRoom.fetch(
-      new Request("http://localhost/websocket", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "join-room", roomId, userId, userName }),
-      })
-    );
-
-    if (response.ok) {
-      ws.send(
-        JSON.stringify({
-          type: "joined-room",
-          roomId,
-          success: true,
-          timestamp: new Date().toISOString(),
-        })
-      );
-    } else {
-      ws.send(
-        JSON.stringify({
-          type: "error",
-          message: "Failed to join room",
-          timestamp: new Date().toISOString(),
-        })
-      );
-    }
-  } catch (error) {
-    console.error("Error joining room:", error);
-    ws.send(
-      JSON.stringify({
-        type: "error",
-        message: "Internal server error",
-        timestamp: new Date().toISOString(),
-      })
-    );
-  }
-}
-
+// WebSocket message handlers
 async function handleSendMessage(data: any, ws: WebSocket, env: Env) {
-  const { roomId, message, userId, userName, role } = data;
+  const { message, userId, userName, role, conversationId, domainId } = data;
 
   try {
-    const chatRoom = env.CHAT_ROOM.get(env.CHAT_ROOM.idFromName(roomId));
-    const response = await chatRoom.fetch(
-      new Request("http://localhost/websocket", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "send-message",
-          roomId,
-          message,
-          userId,
-          userName,
-          role,
-        }),
-      })
-    );
-
-    if (response.ok) {
-      ws.send(
-        JSON.stringify({
-          type: "message-sent",
-          success: true,
-          timestamp: new Date().toISOString(),
-        })
-      );
-    } else {
-      ws.send(
-        JSON.stringify({
-          type: "error",
-          message: "Failed to send message",
-          timestamp: new Date().toISOString(),
-        })
-      );
-    }
-  } catch (error) {
-    console.error("Error sending message:", error);
+    // Send user message back to confirm receipt
     ws.send(
       JSON.stringify({
-        type: "error",
-        message: "Internal server error",
+        type: "message-received",
+        message,
+        userId,
+        userName,
+        role: "user",
         timestamp: new Date().toISOString(),
       })
     );
-  }
-}
 
-async function handleTypingStart(data: any, ws: WebSocket, env: Env) {
-  const { roomId, userId, userName } = data;
-
-  try {
-    const chatRoom = env.CHAT_ROOM.get(env.CHAT_ROOM.idFromName(roomId));
-    await chatRoom.fetch(
-      new Request("http://localhost/websocket", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "typing-start",
-          roomId,
-          userId,
-          userName,
-        }),
-      })
-    );
-  } catch (error) {
-    console.error("Error handling typing start:", error);
-  }
-}
-
-async function handleTypingStop(data: any, ws: WebSocket, env: Env) {
-  const { roomId, userId } = data;
-
-  try {
-    const chatRoom = env.CHAT_ROOM.get(env.CHAT_ROOM.idFromName(roomId));
-    await chatRoom.fetch(
-      new Request("http://localhost/websocket", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "typing-stop", roomId, userId }),
-      })
-    );
-  } catch (error) {
-    console.error("Error handling typing stop:", error);
-  }
-}
-
-async function handleUserOnline(data: any, ws: WebSocket, env: Env) {
-  const { roomId, userId, userName } = data;
-
-  try {
-    const chatRoom = env.CHAT_ROOM.get(env.CHAT_ROOM.idFromName(roomId));
-    await chatRoom.fetch(
-      new Request("http://localhost/websocket", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "user-online", roomId, userId, userName }),
-      })
-    );
-  } catch (error) {
-    console.error("Error handling user online:", error);
-  }
-}
-
-async function handleVisitorJoinedDomain(data: any, ws: WebSocket, env: Env) {
-  const { domainId, visitorId, visitorData } = data;
-
-  try {
-    const visitorTracker = env.VISITOR_TRACKER.get(
-      env.VISITOR_TRACKER.idFromName(domainId)
-    );
-    const response = await visitorTracker.fetch(
-      new Request("http://localhost/visitors/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domainId, visitorId, visitorData }),
-      })
-    );
-
-    if (response.ok) {
-      const result = (await response.json()) as any;
-      ws.send(
-        JSON.stringify({
-          type: "visitor-joined-domain",
-          domainId,
-          visitorId,
-          visitorData,
-          activeCount: result.domainStats?.activeVisitors || 0,
-          timestamp: new Date().toISOString(),
-        })
-      );
-    }
-  } catch (error) {
-    console.error("Error handling visitor joined domain:", error);
-  }
-}
-
-async function handleVisitorLeftDomain(data: any, ws: WebSocket, env: Env) {
-  const { domainId, visitorId } = data;
-
-  try {
-    const visitorTracker = env.VISITOR_TRACKER.get(
-      env.VISITOR_TRACKER.idFromName(domainId)
-    );
-    const response = await visitorTracker.fetch(
-      new Request("http://localhost/visitors/remove", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domainId, visitorId }),
-      })
-    );
-
-    if (response.ok) {
-      const result = (await response.json()) as any;
-      ws.send(
-        JSON.stringify({
-          type: "visitor-left-domain",
-          domainId,
-          visitorId,
-          activeCount: result.domainStats?.activeVisitors || 0,
-          timestamp: new Date().toISOString(),
-        })
-      );
-    }
-  } catch (error) {
-    console.error("Error handling visitor left domain:", error);
-  }
-}
-
-async function handleVisitorActivity(data: any, ws: WebSocket, env: Env) {
-  const { domainId, visitorId } = data;
-
-  try {
-    const visitorTracker = env.VISITOR_TRACKER.get(
-      env.VISITOR_TRACKER.idFromName(domainId)
-    );
-    await visitorTracker.fetch(
-      new Request("http://localhost/visitors/activity", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domainId, visitorId }),
-      })
-    );
-  } catch (error) {
-    console.error("Error handling visitor activity:", error);
-  }
-}
-
-async function handleGetDomainStats(data: any, ws: WebSocket, env: Env) {
-  const { domainId } = data;
-
-  try {
-    const visitorTracker = env.VISITOR_TRACKER.get(
-      env.VISITOR_TRACKER.idFromName(domainId)
-    );
-    const response = await visitorTracker.fetch(
-      new Request(`http://localhost/stats/domain?domainId=${domainId}`)
-    );
-
-    if (response.ok) {
-      const stats = (await response.json()) as any;
-      ws.send(
-        JSON.stringify({
-          type: "domain-stats",
-          domainId,
-          ...stats,
-          timestamp: new Date().toISOString(),
-        })
-      );
-    }
-  } catch (error) {
-    console.error("Error getting domain stats:", error);
-  }
-}
-
-async function handleGetAllDomainStats(ws: WebSocket, env: Env) {
-  try {
-    // This would need to be implemented to get stats from all domains
-    // For now, return empty stats
-    ws.send(
-      JSON.stringify({
-        type: "all-domain-stats",
-        stats: {},
-        timestamp: new Date().toISOString(),
-      })
-    );
-  } catch (error) {
-    console.error("Error getting all domain stats:", error);
-  }
-}
-
-async function handleCustomerJoinedRoom(data: any, ws: WebSocket, env: Env) {
-  const { roomId, customerId, customerName } = data;
-
-  try {
-    const chatRoom = env.CHAT_ROOM.get(env.CHAT_ROOM.idFromName(roomId));
-    await chatRoom.fetch(
-      new Request("http://localhost/websocket", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "customer-joined-room",
-          roomId,
-          customerId,
-          customerName,
-        }),
-      })
-    );
-  } catch (error) {
-    console.error("Error handling customer joined room:", error);
-  }
-}
-
-async function handleAIChat(data: any, ws: WebSocket, env: Env) {
-  const { message, model, domainId, userId, conversationId } = data;
-
-  try {
+    // Get AI response
     const aiHandler = new AIHandler();
-    const response = await aiHandler.getResponse(
+    const aiResponse = await aiHandler.getResponse(
       message,
-      model,
+      "gpt-3.5-turbo",
       domainId,
       userId,
       conversationId
     );
 
+    // Send AI response
     ws.send(
       JSON.stringify({
         type: "ai-response",
-        ...response,
+        message: aiResponse.message,
+        role: "assistant",
         timestamp: new Date().toISOString(),
       })
     );
   } catch (error) {
-    console.error("Error handling AI chat:", error);
+    console.error("Error handling message:", error);
     ws.send(
       JSON.stringify({
         type: "error",
-        message: "Failed to get AI response",
+        message: "Failed to process message",
         timestamp: new Date().toISOString(),
       })
     );
   }
 }
 
-async function handleAIStream(data: any, ws: WebSocket, env: Env) {
-  const { message, model, domainId, userId, conversationId } = data;
+function handleTypingStart(data: any, ws: WebSocket) {
+  const { userId, userName } = data;
 
-  try {
-    const aiHandler = new AIHandler();
-    let fullResponse = "";
-
-    // Create a custom controller for WebSocket streaming
-    const controller = {
-      enqueue: (chunk: Uint8Array) => {
-        const text = new TextDecoder().decode(chunk);
-        fullResponse += text;
-        ws.send(
-          JSON.stringify({
-            type: "ai-stream-chunk",
-            chunk: text,
-            timestamp: new Date().toISOString(),
-          })
-        );
-      },
-      close: () => {
-        ws.send(
-          JSON.stringify({
-            type: "ai-stream-complete",
-            fullResponse,
-            timestamp: new Date().toISOString(),
-          })
-        );
-      },
-    };
-
-    await aiHandler.streamResponse(
-      message,
-      model,
-      domainId,
-      controller as any,
+  ws.send(
+    JSON.stringify({
+      type: "typing-start",
       userId,
-      conversationId
-    );
-  } catch (error) {
-    console.error("Error handling AI stream:", error);
-    ws.send(
-      JSON.stringify({
-        type: "error",
-        message: "Failed to get AI stream response",
-        timestamp: new Date().toISOString(),
-      })
-    );
-  }
+      userName,
+      timestamp: new Date().toISOString(),
+    })
+  );
+}
+
+function handleTypingStop(data: any, ws: WebSocket) {
+  const { userId, userName } = data;
+
+  ws.send(
+    JSON.stringify({
+      type: "typing-stop",
+      userId,
+      userName,
+      timestamp: new Date().toISOString(),
+    })
+  );
+}
+
+function handlePing(ws: WebSocket) {
+  ws.send(
+    JSON.stringify({
+      type: "pong",
+      timestamp: new Date().toISOString(),
+    })
+  );
 }
 
 export default app;
-
-// Export Durable Objects for Cloudflare Workers
-export { ChatRoom } from "./chat-room.js";
-export { VisitorTracker } from "./visitor-tracker.js";
