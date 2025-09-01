@@ -5,6 +5,7 @@ import { BlogCard } from "./blog-card";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/spinner";
 
 interface WordPressPost {
   id: number;
@@ -98,7 +99,7 @@ export function BlogArchive() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full w-8 h-8 border-b-2 border-primary mx-auto"></div>
+        <Spinner size="md" />
       </div>
     );
   }
@@ -139,7 +140,7 @@ export function BlogArchive() {
               >
                 {loadingMore ? (
                   <>
-                    <div className="animate-spin rounded-full w-4 h-4 border-b-2 border-primary mr-2"></div>
+                    <Spinner size="sm" className="mr-2" />
                     Loading more...
                   </>
                 ) : (

@@ -66,6 +66,23 @@ const EmbedChatBot = () => {
     currentBotId,
   } = useChatBot();
 
+  // ✅ NEW: Debug current bot data - MOVED AFTER currentBot is defined
+  useEffect(() => {
+    if (currentBot) {
+      console.log("🤖 Current bot data:", currentBot);
+      console.log("📚 Help desk questions:", currentBot.helpdesk?.length || 0);
+      console.log("🔧 Help desk enabled:", currentBot.chatBot?.helpdesk);
+      console.log(
+        "📝 Task summary:",
+        currentBot.chatBot?.taskSummary ? "Available" : "Not available"
+      );
+      console.log("🏷️ Domain name:", currentBot.name);
+      console.log("🆔 Domain ID:", currentBotId);
+    } else {
+      console.log("❌ No current bot data available");
+    }
+  }, [currentBot, currentBotId]);
+
   // ✅ NEW: Close chatbot function
   const onCloseChatBot = () => {
     onOpenChatBot(); // This toggles the bot state to closed
@@ -84,6 +101,19 @@ const EmbedChatBot = () => {
       handleStartNewChat();
     }
   };
+
+  // ✅ NEW: Debug props being passed to MultiPageBotWindow
+  useEffect(() => {
+    if (botOpened && pageState) {
+      console.log("🎯 MultiPageBotWindow props:", {
+        domainName: currentBot?.name || "WeezGen",
+        domainId: currentBotId || "",
+        helpdeskEnabled: currentBot?.chatBot?.helpdesk || false,
+        helpdeskQuestions: currentBot?.helpdesk || [],
+        helpdeskLength: currentBot?.helpdesk?.length || 0,
+      });
+    }
+  }, [botOpened, pageState, currentBot, currentBotId]);
 
   return (
     <div className="w-full h-[600px] bg-transparent flex flex-col justify-end items-end">

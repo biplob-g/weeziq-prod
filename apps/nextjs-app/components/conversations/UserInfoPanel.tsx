@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronRight,
   X,
+  Loader,
 } from "lucide-react";
 import { SelectedConversation } from "./ConversationLayout";
 import { onGetCustomerInfo } from "@/actions/conversation";
@@ -277,7 +278,7 @@ const UserInfoPanel = ({ selectedConversation, onClose }: Props) => {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center space-y-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <Loader className="h-8 w-8 animate-spin text-[#722594]" />
           <p className="text-sm text-muted-foreground">
             Loading customer info...
           </p>

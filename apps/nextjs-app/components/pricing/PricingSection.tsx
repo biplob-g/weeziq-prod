@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
+import { Spinner } from "@/components/spinner";
 import { getPlanLimits } from "@/lib/plans";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
@@ -252,7 +253,7 @@ export const PricingSection = () => {
               >
                 {loading === plan.id ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                    <Spinner size="sm" className="mr-2" />
                     Processing...
                   </>
                 ) : plan.id === "STARTER" ? (

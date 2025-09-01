@@ -9,15 +9,21 @@ import { PaperclipIcon } from "lucide-react";
 import { Input } from "../ui/input";
 import { SelectedConversation } from "./ConversationLayout";
 import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Switch } from "../ui/switch";
+import { Label } from "../ui/label";
 
 type Props = {
   selectedConversation: SelectedConversation | null;
   initialChatMessages?: any;
+  onToggleLiveAgent?: (chatRoomId: string, enabled: boolean) => void;
+  isLiveAgentEnabled?: boolean;
 };
 
 const ConversationView = ({
   selectedConversation,
   initialChatMessages,
+  onToggleLiveAgent,
+  isLiveAgentEnabled = false,
 }: Props) => {
   const {
     messageWindowRef,
@@ -47,6 +53,17 @@ const ConversationView = ({
       setChats(formattedChats);
     }
   }, [initialChatMessages, chats.length, setChats]);
+
+  // ✅ NEW: Auto-scroll to bottom when new messages arrive
+  React.useEffect(() => {
+    if (messageWindowRef.current) {
+      messageWindowRef.current.scrollTop =
+        messageWindowRef.current.scrollHeight;
+    }
+  }, [chats]);
+
+  // ✅ NEW: Show typing indicator for optimistic messages
+  const showTypingIndicator = chats.some((chat) => chat.isOptimistic);
 
   // Generate avatar from customer name
   const getAvatarInitials = (name: string | null | undefined): string => {
@@ -91,6 +108,20 @@ const ConversationView = ({
             {selectedConversation.customerName || "Unknown Customer"}
           </h3>
         </div>
+        <div className="flex items-center gap-2">
+          <Switch
+            id="live-agent-mode"
+            checked={isLiveAgentEnabled}
+            onCheckedChange={(checked) => {
+              if (onToggleLiveAgent && selectedConversation?.chatRoomId) {
+                onToggleLiveAgent(selectedConversation.chatRoomId, checked);
+              }
+            }}
+          />
+          <Label htmlFor="live-agent-mode" className="text-sm font-medium">
+            Live Agent
+          </Label>
+        </div>
       </div>
 
       {/* Messages Area */}
@@ -98,6 +129,7 @@ const ConversationView = ({
         <Loader loading={loading && chats.length === 0}>
           <div
             ref={messageWindowRef}
+            data-message-container
             className="flex-1 flex flex-col gap-4 p-4 overflow-y-auto bg-background"
           >
             {chats.length ? (
@@ -122,6 +154,26 @@ const ConversationView = ({
                     Start the conversation by sending a message.
                   </p>
                 </div>
+              </div>
+            )}
+
+            {/* ✅ NEW: Typing indicator for optimistic messages */}
+            {showTypingIndicator && (
+              <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg max-w-xs">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                  <div
+                    className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                    style={{ animationDelay: "0.1s" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                    style={{ animationDelay: "0.2s" }}
+                  ></div>
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  Sending...
+                </span>
               </div>
             )}
           </div>

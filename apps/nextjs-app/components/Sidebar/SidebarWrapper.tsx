@@ -6,6 +6,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Spinner } from "../spinner";
 
 type Props = {
   children: React.ReactNode;
@@ -28,7 +29,7 @@ function SidebarWrapper({ children }: Props) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <Spinner size="xl" />
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>

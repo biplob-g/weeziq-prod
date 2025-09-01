@@ -12,6 +12,7 @@ import {
   onGenerateTaskSummary,
 } from "@/actions/settings";
 import { Sparkles } from "lucide-react";
+import { Spinner } from "../spinner";
 import FileUpload from "./FileUpload";
 
 type Props = {
@@ -153,7 +154,7 @@ const TaskSummary = ({ id }: Props) => {
                       >
                         {isGenerating ? (
                           <>
-                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
+                            <Spinner size="sm" />
                             <span className="text-xs">Generating...</span>
                           </>
                         ) : (

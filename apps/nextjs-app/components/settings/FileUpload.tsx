@@ -16,6 +16,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import { Spinner } from "../spinner";
 import {
   onGetDomainFiles,
   onDeleteFile,
@@ -232,9 +233,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ domainId }) => {
       case "FAILED":
         return <XCircle className="h-4 w-4 text-red-500" />;
       case "PROCESSING":
-        return (
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-        );
+        return <Spinner size="sm" />;
       default:
         return <AlertCircle className="h-4 w-4 text-yellow-500" />;
     }
@@ -259,7 +258,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ domainId }) => {
         <CardContent className="p-6">
           <CardTitle className="mb-6">File Upload</CardTitle>
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <Spinner size="md" />
             <span className="ml-2">Loading files...</span>
           </div>
         </CardContent>
@@ -313,7 +312,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ domainId }) => {
 
             {_uploadingFileId !== null ? (
               <div className="space-y-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <Spinner size="md" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">
                     Uploading file...
@@ -386,7 +385,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ domainId }) => {
 
                       {deletingFileId === file.id ? (
                         <div className="flex items-center space-x-2 text-red-500">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                          <Spinner size="sm" />
                           <span className="text-xs">Deleting...</span>
                         </div>
                       ) : (

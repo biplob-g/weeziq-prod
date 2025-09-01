@@ -108,7 +108,7 @@ export function FooterSection() {
               Press
             </a>
             <a
-              href="#"
+              href="/contact"
               className="text-foreground text-sm font-normal leading-5 hover:underline"
             >
               Contact

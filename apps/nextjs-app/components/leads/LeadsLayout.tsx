@@ -33,6 +33,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FileSpreadsheet,
+  Loader,
 } from "lucide-react";
 import { onGetDomainChatRooms } from "@/actions/conversation";
 import { toast } from "sonner";
@@ -234,7 +235,7 @@ const LeadsLayout = ({ domains }: LeadsLayoutProps) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <Loader className="h-8 w-8 animate-spin text-[#722594]" />
       </div>
     );
   }

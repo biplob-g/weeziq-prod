@@ -1,5 +1,5 @@
 import React from "react";
-import { Spinner } from "../spinner";
+import { Loader as LoaderIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LoaderProps {
@@ -17,7 +17,9 @@ export const Loader = ({
 }: LoaderProps) => {
   return loading ? (
     <div className={cn(className || "w-full py-5 flex justify-center")}>
-      <Spinner noPadding={noPadding} />
+      <div className={cn("flex justify-center", noPadding ? "" : "py-10")}>
+        <LoaderIcon className="h-8 w-8 animate-spin text-[#722594]" />
+      </div>
     </div>
   ) : (
     <>{children}</>

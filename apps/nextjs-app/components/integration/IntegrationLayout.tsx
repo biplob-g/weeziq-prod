@@ -9,6 +9,7 @@ import {
   CheckCircle,
   XCircle,
   ExternalLink,
+  Loader,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -156,7 +157,7 @@ const IntegrationLayout = ({ domains: _domains }: IntegrationLayoutProps) => {
                   className="flex items-center gap-2"
                 >
                   {isDisconnecting ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    <Loader className="h-4 w-4 animate-spin text-[#722594]" />
                   ) : (
                     <XCircle className="h-4 w-4" />
                   )}
@@ -198,7 +199,7 @@ const IntegrationLayout = ({ domains: _domains }: IntegrationLayoutProps) => {
                 className="w-full flex items-center gap-2"
               >
                 {isConnecting ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  <Loader className="h-4 w-4 animate-spin text-[#722594]" />
                 ) : (
                   <FileSpreadsheet className="h-4 w-4" />
                 )}

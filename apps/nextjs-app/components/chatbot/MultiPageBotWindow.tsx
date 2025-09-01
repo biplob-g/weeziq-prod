@@ -199,6 +199,8 @@ const MultiPageBotWindow = forwardRef<HTMLDivElement, MultiPageBotWindowProps>(
               onStartNewChat={() => {
                 onStartNewChat?.();
               }}
+              _helpdeskEnabled={help} // ✅ NEW: Pass helpdesk enabled state (unused)
+              helpdeskQuestions={helpdesk} // ✅ NEW: Pass helpdesk questions
             />
           );
 

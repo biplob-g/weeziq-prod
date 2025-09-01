@@ -44,10 +44,25 @@ const ConversationLayout = ({
   // Sidebar state - closed by default
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Live agent mode state
+  const [liveAgentMode, setLiveAgentMode] = useState<{
+    chatRoomId: string;
+    enabled: boolean;
+  } | null>(null);
+
   const handleConversationSelect = (conversation: SelectedConversation) => {
     setSelectedConversation(conversation);
     // Auto-open sidebar when a conversation is selected
     setIsSidebarOpen(true);
+  };
+
+  const handleToggleLiveAgent = (chatRoomId: string, enabled: boolean) => {
+    setLiveAgentMode({ chatRoomId, enabled });
+    console.log(
+      `👮‍♂️ Live agent mode ${
+        enabled ? "enabled" : "disabled"
+      } for chat room: ${chatRoomId}`
+    );
   };
 
   const toggleSidebar = () => {
@@ -72,6 +87,11 @@ const ConversationLayout = ({
         <ConversationView
           selectedConversation={selectedConversation}
           initialChatMessages={initialChatMessages}
+          onToggleLiveAgent={handleToggleLiveAgent}
+          isLiveAgentEnabled={
+            liveAgentMode?.chatRoomId === selectedConversation?.chatRoomId &&
+            liveAgentMode?.enabled
+          }
         />
 
         {/* Sidebar Toggle Button - positioned on the right edge of chat window */}

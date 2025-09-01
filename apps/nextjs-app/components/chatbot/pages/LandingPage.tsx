@@ -9,6 +9,13 @@ interface LandingPageProps {
   customerName: string;
   onNavigateToPage: (page: string) => void;
   onStartNewChat: () => void;
+  _helpdeskEnabled?: boolean; // ✅ NEW: Add helpdesk enabled prop (unused)
+  helpdeskQuestions?: Array<{
+    id: string;
+    question: string;
+    answered: string;
+    domainId: string | null;
+  }>; // ✅ NEW: Add helpdesk questions prop
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({
@@ -16,6 +23,8 @@ const LandingPage: React.FC<LandingPageProps> = ({
   customerName: _customerName,
   onNavigateToPage,
   onStartNewChat,
+  _helpdeskEnabled = false, // ✅ NEW: Default to false (unused)
+  helpdeskQuestions = [], // ✅ NEW: Default to empty array
 }) => {
   return (
     <div className="flex-1 flex flex-col bg-white">
@@ -42,20 +51,23 @@ const LandingPage: React.FC<LandingPageProps> = ({
             </Button>
           )}
 
-          {/* Help Center Button - Always visible */}
-          <Button
-            onClick={() => onNavigateToPage("helpdesk")}
-            variant="outline"
-            className="w-full h-14 text-left justify-start gap-3"
-          >
-            <MessageSquare className="w-5 h-5" />
-            <div className="flex flex-col items-start">
-              <span className="font-medium">Help Center</span>
-              <span className="text-xs text-muted-foreground">
-                Browse help articles and FAQs
-              </span>
-            </div>
-          </Button>
+          {/* Help Center Button - Always show if helpdesk questions are available */}
+          {helpdeskQuestions.length > 0 && (
+            <Button
+              onClick={() => onNavigateToPage("helpdesk")}
+              variant="outline"
+              className="w-full h-14 text-left justify-start gap-3"
+            >
+              <MessageSquare className="w-5 h-5" />
+              <div className="flex flex-col items-start">
+                <span className="font-medium">Help Center</span>
+                <span className="text-xs text-muted-foreground">
+                  Browse help articles and FAQs ({helpdeskQuestions.length}{" "}
+                  articles)
+                </span>
+              </div>
+            </Button>
+          )}
 
           {/* New Conversation Button - Always visible */}
           <Button

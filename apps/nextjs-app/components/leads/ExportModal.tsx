@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { FileSpreadsheet, Plus } from "lucide-react";
+import { Spinner } from "../spinner";
 import { toast } from "sonner";
 import {
   onGetGoogleSheets,
@@ -164,7 +165,7 @@ const ExportModal = ({ isOpen, onClose, leads }: ExportModalProps) => {
 
             {isLoadingSheets && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                <Spinner size="sm" />
                 Loading spreadsheets...
               </div>
             )}
@@ -215,7 +216,7 @@ const ExportModal = ({ isOpen, onClose, leads }: ExportModalProps) => {
             className="flex items-center gap-2"
           >
             {isLoading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              <Spinner size="sm" />
             ) : (
               <FileSpreadsheet className="h-4 w-4" />
             )}

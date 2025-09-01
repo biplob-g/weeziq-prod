@@ -3,6 +3,7 @@
 import React from "react";
 import { Button } from "../../ui/button";
 import { MessageSquare } from "lucide-react";
+import { Spinner } from "../../spinner";
 
 interface ChatRoom {
   id: string;
@@ -60,7 +61,7 @@ const ConversationHistoryPage: React.FC<ConversationHistoryPageProps> = ({
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center space-y-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <Spinner size="md" />
           <p className="text-sm text-muted-foreground">
             Loading conversations...
           </p>

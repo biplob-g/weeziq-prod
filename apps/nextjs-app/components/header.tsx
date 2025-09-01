@@ -16,14 +16,11 @@ import Link from "next/link";
 import { ThemeToggle } from "./theme-toggle";
 import { UserProfile } from "./user-profile";
 import { useRouter, usePathname } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [user, setUser] = useState<{
-    name: string;
-    email: string;
-    avatar?: string;
-  } | null>(null);
+  const { user } = useUser();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -31,6 +28,7 @@ export function Header() {
     { name: "Features", href: "#features-section" },
     { name: "Blog", href: "/blog" },
     { name: "Pricing", href: "#pricing-section" },
+    { name: "Contact", href: "/contact" },
     { name: "FAQ", href: "#faq-section" },
   ];
 
@@ -77,7 +75,6 @@ export function Header() {
   };
 
   const handleSignOut = () => {
-    setUser(null);
     router.push("/");
   };
 
@@ -123,14 +120,20 @@ export function Header() {
           {/* Auth Actions - Desktop */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <UserProfile user={user} onSignOut={handleSignOut} />
+              <>
+                <Link href="/dashboard">
+                  <Button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 font-medium shadow-sm transition-colors">
+                    Go To Dashboard
+                  </Button>
+                </Link>
+              </>
             ) : (
               <>
-                <Link href="/auth/sign-up">
+                <a href="/auth/sign-up">
                   <Button className="btn-primary-gradient px-6 py-2 font-medium shadow-sm">
                     Start Free Trial
                   </Button>
-                </Link>
+                </a>
               </>
             )}
           </div>
@@ -166,14 +169,26 @@ export function Header() {
                 <div className="pt-4 border-t border-border">
                   {user ? (
                     <div className="space-y-3">
+                      <Link href="/dashboard" className="w-full">
+                        <Button className="w-full justify-start bg-purple-600 hover:bg-purple-700 text-white font-medium">
+                          Go To Dashboard
+                        </Button>
+                      </Link>
                       <div className="flex items-center gap-3 p-2">
-                        <UserProfile user={user} onSignOut={handleSignOut} />
+                        <UserProfile
+                          user={{
+                            name: user.fullName || user.firstName || "User",
+                            email: user.primaryEmailAddress?.emailAddress || "",
+                            avatar: user.imageUrl,
+                          }}
+                          onSignOut={handleSignOut}
+                        />
                         <div>
                           <p className="text-sm font-medium text-foreground">
-                            {user.name}
+                            {user.fullName || user.firstName || "User"}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {user.email}
+                            {user.primaryEmailAddress?.emailAddress || ""}
                           </p>
                         </div>
                       </div>

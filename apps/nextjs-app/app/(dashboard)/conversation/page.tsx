@@ -5,7 +5,7 @@ import {
 } from "@/actions/conversation";
 import ConversationLayout from "@/components/conversations/ConversationLayout";
 // import InfoBars from "@/components/infoBar";
-import React from "react";
+import React, { Suspense } from "react";
 
 interface ConversationPageProps {
   searchParams: Promise<{ room?: string }>;
@@ -61,13 +61,21 @@ const ConversationPage = async ({ searchParams }: ConversationPageProps) => {
     <div className="w-full h-full flex flex-col">
       <div className="px-5 py-2">{/* <InfoBars /> */}</div>
       <div className="flex-1 min-h-0">
-        <ConversationLayout
-          domains={domains?.domains}
-          initialRoomId={resolvedSearchParams.room}
-          initialChatRooms={initialChatRooms}
-          initialChatMessages={initialChatMessages}
-          initialSelectedConversation={initialSelectedConversation}
-        />
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center h-full">
+              Loading conversations...
+            </div>
+          }
+        >
+          <ConversationLayout
+            domains={domains?.domains}
+            initialRoomId={resolvedSearchParams.room}
+            initialChatRooms={initialChatRooms}
+            initialChatMessages={initialChatMessages}
+            initialSelectedConversation={initialSelectedConversation}
+          />
+        </Suspense>
       </div>
     </div>
   );

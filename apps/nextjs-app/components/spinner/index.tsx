@@ -1,72 +1,39 @@
 import { cn } from "@/lib/utils";
 import React from "react";
+import { Loader } from "lucide-react";
 
 type SpinnerProps = {
   noPadding?: boolean;
+  size?: "sm" | "md" | "lg" | "xl";
+  color?: string;
+  className?: string;
 };
 
-export const Spinner = ({ noPadding }: SpinnerProps) => {
+export const Spinner = ({
+  noPadding,
+  size = "md",
+  color = "#722594",
+  className,
+}: SpinnerProps) => {
+  const sizeClasses = {
+    sm: "h-4 w-4",
+    md: "h-8 w-8",
+    lg: "h-12 w-12",
+    xl: "h-16 w-16",
+  };
+
   return (
-    <div className={cn("w-full flex justify-center", noPadding ? "" : "py-10")}>
-      <div role="status">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-          <circle
-            fill="#722594"
-            stroke="#722594"
-            strokeWidth="15"
-            r="15"
-            cx="40"
-            cy="65"
-          >
-            <animate
-              attributeName="cy"
-              calcMode="spline"
-              dur="2"
-              values="65;135;65;"
-              keySplines=".5 0 .5 1;.5 0 .5 1"
-              repeatCount="indefinite"
-              begin="-.4"
-            ></animate>
-          </circle>
-          <circle
-            fill="#722594"
-            stroke="#722594"
-            strokeWidth="15"
-            r="15"
-            cx="100"
-            cy="65"
-          >
-            <animate
-              attributeName="cy"
-              calcMode="spline"
-              dur="2"
-              values="65;135;65;"
-              keySplines=".5 0 .5 1;.5 0 .5 1"
-              repeatCount="indefinite"
-              begin="-.2"
-            ></animate>
-          </circle>
-          <circle
-            fill="#722594"
-            stroke="#722594"
-            strokeWidth="15"
-            r="15"
-            cx="160"
-            cy="65"
-          >
-            <animate
-              attributeName="cy"
-              calcMode="spline"
-              dur="2"
-              values="65;135;65;"
-              keySplines=".5 0 .5 1;.5 0 .5 1"
-              repeatCount="indefinite"
-              begin="0"
-            ></animate>
-          </circle>
-        </svg>
-        <span className="sr-only">Loading...</span>
-      </div>
+    <div
+      className={cn(
+        "w-full flex justify-center",
+        noPadding ? "" : "py-10",
+        className
+      )}
+    >
+      <Loader
+        className={cn("animate-spin", sizeClasses[size])}
+        style={{ color }}
+      />
     </div>
   );
 };

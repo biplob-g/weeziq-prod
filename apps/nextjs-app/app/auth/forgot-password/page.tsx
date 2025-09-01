@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Mail, Lock, Key } from "lucide-react";
+import { Spinner } from "@/components/spinner";
 import Link from "next/link";
 
 const ForgotPasswordPage: NextPage = () => {
@@ -125,7 +126,7 @@ const ForgotPasswordPage: NextPage = () => {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                  <Spinner size="sm" className="mr-2" />
                   Checking...
                 </>
               ) : (

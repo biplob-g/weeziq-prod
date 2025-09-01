@@ -11,6 +11,7 @@ import Image from "next/image";
 import TabsMenu from "../tabs";
 import { BOT_TABS_MENU } from "@/constants/menu";
 import { Paperclip, Send } from "lucide-react";
+import { Spinner } from "../spinner";
 import Bubble from "./bubble";
 import { Responding } from "./responding";
 import { Separator } from "../ui/separator";
@@ -336,7 +337,7 @@ const BotWindow = forwardRef<HTMLDivElement, BotWindowProps>(
         {isCheckingIP ? (
           <div className="flex-1 flex items-center justify-center p-4">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+              <Spinner size="md" className="mb-2" />
               <p className="text-sm text-gray-600">
                 Checking for previous conversations...
               </p>

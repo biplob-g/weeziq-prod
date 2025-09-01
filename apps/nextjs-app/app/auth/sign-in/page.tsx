@@ -5,7 +5,7 @@ import LoginForm from "@/components/forms/SignIn/loginForm";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useSignInForm } from "@/hooks/sign-in/useSignIn";
-import { Loader2 } from "lucide-react";
+import { Loader as LoaderIcon } from "lucide-react";
 
 const SignInPage = () => {
   const { loading } = useSignInForm();
@@ -24,7 +24,7 @@ const SignInPage = () => {
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
                   Signing in...
                 </>
               ) : (

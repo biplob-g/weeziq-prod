@@ -26,6 +26,7 @@ import {
   Database,
   BarChart3,
   CreditCard,
+  Loader,
 } from "lucide-react";
 import InfoBars from "@/components/infoBar";
 
@@ -91,7 +92,7 @@ const DashboardPage = () => {
   if (isLoading) {
     return (
       <div className="p-6 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+        <Loader className="h-8 w-8 animate-spin text-[#722594]" />
       </div>
     );
   }
