@@ -8,7 +8,7 @@ interface ContactFormData {
   message: string;
 }
 
-// Create transporter for sending emails
+// Create transporter for sending emails...
 const createTransporter = () => {
   return nodemailer.createTransport({
     service: "gmail",
