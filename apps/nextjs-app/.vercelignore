@@ -1,0 +1,20 @@
+# Test files and directories
+__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+jest.config.js
+jest.setup.js
+playwright.config.ts
+e2e/
+
+# Test dependencies
+node_modules/@testing-library/
+node_modules/jest/
+node_modules/@playwright/
+node_modules/msw/
+
+# Development files
+.env.local
+.env.development
