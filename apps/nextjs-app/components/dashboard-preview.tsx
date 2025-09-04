@@ -6,7 +6,7 @@ export function DashboardPreview() {
       <div className="bg-primary-light/50 rounded-2xl py-2 shadow-2xl mt-0">
         <div className="relative w-full h-full">
           {/* Static image without video functionality */}
-          <div className="relative w-full h-full top-10">
+          <div className="relative w-full h-full top-15">
             <Image
               src="/images/app-chats.png"
               alt="Dashboard preview"
