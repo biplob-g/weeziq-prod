@@ -13,27 +13,30 @@ export const UserRegistrationSchema = z
   .object({
     fullname: z
       .string()
-      .min(4, { message: "Your full name must be atleast 4 characters long" }),
-    email: z.string().email({ message: "Incorrect email formate" }),
-    confirmEmail: z.string().email(),
+      .min(4, { message: "Your full name must be at least 4 characters long" }),
+    email: z.string().email({ message: "Please enter a valid email address" }),
+    confirmEmail: z
+      .string()
+      .email({ message: "Please enter a valid email address" }),
     password: z
       .string()
-      .min(8, { message: "Your password must be atleast 8 characters long" })
-      .max(64, { message: "Your password cannot be longer than 64 characters" })
+      .min(8, { message: "Password must be at least 8 characters long" })
+      .max(64, { message: "Password cannot be longer than 64 characters" })
       .refine(
-        (value) => /^[a-zA-Z0-9_.-]*$/.test(value ?? ""),
-        "password should contain only alphabets and numbers"
+        (value) => /^[a-zA-Z0-9@$!%*?&_.-]*$/.test(value ?? ""),
+        "Password can contain letters, numbers, and common symbols (@$!%*?&_.-)"
       ),
     confirmPassword: z.string(),
-    otp: z.string().min(6, { message: "You must enter a 6 digit code" }),
+    otp: z
+      .string()
+      .min(6, { message: "Please enter a 6-digit verification code" }),
   })
-
   .refine((schema) => schema.password === schema.confirmPassword, {
-    message: "password do not match",
+    message: "Passwords do not match",
     path: ["confirmPassword"],
   })
   .refine((schema) => schema.email === schema.confirmEmail, {
-    message: "Your emails does not match",
+    message: "Email addresses do not match",
     path: ["confirmEmail"],
   });
 
@@ -46,9 +49,9 @@ export const ChangePasswordSchema = z
   .object({
     password: z
       .string()
-      .min(0, { message: "Your password must be atleast 8 characters long" })
+      .min(8, { message: "Your password must be atleast 8 characters long" })
       .max(64, {
-        message: "Your password cannot be loner than 64 characters long",
+        message: "Your password cannot be longer than 64 characters long",
       })
       .refine(
         (value) => /^[a-zA-Z0-9_.-]*$/.test(value ?? ""),

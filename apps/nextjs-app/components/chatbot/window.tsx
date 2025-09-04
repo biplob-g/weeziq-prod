@@ -161,21 +161,26 @@ const BotWindow = forwardRef<HTMLDivElement, BotWindowProps>(
     // ✅ NEW: Visitor tracking effect
     useEffect(() => {
       if (domainId) {
-        // Get socket and safely extract socket ID
-        const socket = socketClient.getSocket();
-        const socketId = socket && "id" in socket ? socket.id : undefined;
-
-        // Join domain as visitor when widget opens
-        socketClient.joinDomainAsVisitor(domainId, visitorId, {
-          socketId,
-          userAgent: navigator.userAgent,
-          timestamp: new Date(),
-        });
+        // Join room as visitor when widget opens
+        // Note: Using joinRoom method instead of non-existent joinDomainAsVisitor
+        socketClient.joinRoom(
+          `domain-${domainId}`, // Create a room ID based on domain
+          visitorId,
+          "Visitor",
+          "customer",
+          domainId
+        );
 
         // Set up activity tracking
         const updateActivity = () => {
           setLastActivityTime(Date.now());
-          socketClient.sendVisitorActivity(domainId, visitorId);
+          // Note: sendVisitorActivity method doesn't exist, using sendMessage instead
+          socketClient.sendMessage({
+            type: "visitor-activity",
+            domainId,
+            visitorId,
+            timestamp: new Date().toISOString(),
+          });
         };
 
         // Track user activity
@@ -215,7 +220,13 @@ const BotWindow = forwardRef<HTMLDivElement, BotWindowProps>(
           if (inactivityTimer) clearTimeout(inactivityTimer);
 
           // Leave domain when widget closes
-          socketClient.leaveDomainAsVisitor(domainId, visitorId);
+          // Note: leaveDomainAsVisitor method doesn't exist, using sendMessage instead
+          socketClient.sendMessage({
+            type: "leave-domain",
+            domainId,
+            visitorId,
+            timestamp: new Date().toISOString(),
+          });
         };
       }
     }, [domainId, visitorId, chats.length]);

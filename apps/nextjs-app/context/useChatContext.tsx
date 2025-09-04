@@ -15,6 +15,7 @@ type ChatInitialValueProps = {
     role: "assistant" | "user" | null;
     createdAt: Date;
     seen: boolean;
+    isOptimistic?: boolean; // ✅ NEW: For optimistic updates
   }[];
   setChats: React.Dispatch<
     React.SetStateAction<
@@ -24,6 +25,7 @@ type ChatInitialValueProps = {
         role: "assistant" | "user" | null;
         createdAt: Date;
         seen: boolean;
+        isOptimistic?: boolean; // ✅ NEW: For optimistic updates
       }[]
     >
   >;

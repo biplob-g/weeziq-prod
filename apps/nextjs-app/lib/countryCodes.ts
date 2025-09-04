@@ -32,48 +32,35 @@ export const findCountryByDialCode = (
   return countryCodes.find((country) => country.dialCode === dialCode);
 };
 
-// Enhanced IP-based country detection
+// Enhanced IP-based country detection with full geolocation data
 export const detectCountryFromIP = async (): Promise<
   CountryCode | undefined
 > => {
   try {
-    // Try multiple IP geolocation services for better reliability
-    const services = [
-      "https://ipapi.co/json/",
-      "https://ipinfo.io/json",
-      "https://api.ipgeolocation.io/ipgeo?apiKey=free",
-    ];
+    // ✅ FIXED: Use our server-side API endpoint to avoid CORS issues
+    const response = await fetch("/api/ip-detect", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    });
 
-    for (const service of services) {
-      try {
-        const response = await fetch(service, {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-          },
-        });
+    if (response.ok) {
+      const data = await response.json();
 
-        if (response.ok) {
-          const data = await response.json();
-          const countryCode = data.country_code || data.countryCode;
-
-          if (countryCode) {
-            const country = findCountryByCode(countryCode);
-            if (country) {
-              console.log(
-                `✅ Country detected: ${country.name} (${country.code})`
-              );
-              return country;
-            }
-          }
+      if (data.success && data.countryCode) {
+        const country = findCountryByCode(data.countryCode);
+        if (country) {
+          console.log(`✅ Country detected: ${country.name} (${country.code})`);
+          console.log(
+            `📍 Location: ${data.city}, ${data.region}, ${data.country}`
+          );
+          return country;
         }
-      } catch (error) {
-        console.warn(`⚠️ Failed to detect country from ${service}:`, error);
-        continue;
       }
     }
 
-    // Fallback to US if all services fail
+    // Fallback to US if detection fails
     console.log("⚠️ Could not detect country, falling back to US");
     return findCountryByCode("US");
   } catch (error) {

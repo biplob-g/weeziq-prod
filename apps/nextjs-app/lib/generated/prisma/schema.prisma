@@ -136,17 +136,21 @@ model ChatMessage {
 }
 
 model AiUsage {
-  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  chatMessageId String      @unique @db.Uuid
-  modelUsed     String // "gemini-pro" or "gemini-flash-lite"
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  chatMessageId String?      @unique @db.Uuid // Made optional and unique for one-to-one relation
+  model         String // "gpt-4o", "gpt-4o-mini", "gemini-pro", etc.
   tokensUsed    Int // Number of tokens consumed
-  creditsUsed   Int         @default(0) // Credits used (1 credit = 1000 tokens for Pro model)
-  domainId      String      @db.Uuid
-  userId        String      @db.Uuid
-  createdAt     DateTime    @default(now())
-  ChatMessage   ChatMessage @relation(fields: [chatMessageId], references: [id], onDelete: Cascade)
-  Domain        Domain      @relation(fields: [domainId], references: [id], onDelete: Cascade)
-  User          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creditsUsed   Int          @default(0) // Number of credits consumed
+  estimatedCost Float        @default(0) // Estimated cost in USD
+  messageType   String       @default("chat") // "chat", "stream", "initialization"
+  success       Boolean      @default(true) // Whether the AI request was successful
+  domainId      String?      @db.Uuid // Made optional
+  userId        String       @db.Uuid
+  usedAt        DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  ChatMessage   ChatMessage? @relation(fields: [chatMessageId], references: [id], onDelete: Cascade)
+  Domain        Domain?      @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  User          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // ✅ NEW: Satisfaction Rating model

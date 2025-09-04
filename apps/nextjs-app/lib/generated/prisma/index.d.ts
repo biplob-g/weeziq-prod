@@ -13810,43 +13810,57 @@ export namespace Prisma {
   export type AiUsageAvgAggregateOutputType = {
     tokensUsed: number | null
     creditsUsed: number | null
+    estimatedCost: number | null
   }
 
   export type AiUsageSumAggregateOutputType = {
     tokensUsed: number | null
     creditsUsed: number | null
+    estimatedCost: number | null
   }
 
   export type AiUsageMinAggregateOutputType = {
     id: string | null
     chatMessageId: string | null
-    modelUsed: string | null
+    model: string | null
     tokensUsed: number | null
     creditsUsed: number | null
+    estimatedCost: number | null
+    messageType: string | null
+    success: boolean | null
     domainId: string | null
     userId: string | null
+    usedAt: Date | null
     createdAt: Date | null
   }
 
   export type AiUsageMaxAggregateOutputType = {
     id: string | null
     chatMessageId: string | null
-    modelUsed: string | null
+    model: string | null
     tokensUsed: number | null
     creditsUsed: number | null
+    estimatedCost: number | null
+    messageType: string | null
+    success: boolean | null
     domainId: string | null
     userId: string | null
+    usedAt: Date | null
     createdAt: Date | null
   }
 
   export type AiUsageCountAggregateOutputType = {
     id: number
     chatMessageId: number
-    modelUsed: number
+    model: number
     tokensUsed: number
     creditsUsed: number
+    estimatedCost: number
+    messageType: number
+    success: number
     domainId: number
     userId: number
+    usedAt: number
     createdAt: number
     _all: number
   }
@@ -13855,43 +13869,57 @@ export namespace Prisma {
   export type AiUsageAvgAggregateInputType = {
     tokensUsed?: true
     creditsUsed?: true
+    estimatedCost?: true
   }
 
   export type AiUsageSumAggregateInputType = {
     tokensUsed?: true
     creditsUsed?: true
+    estimatedCost?: true
   }
 
   export type AiUsageMinAggregateInputType = {
     id?: true
     chatMessageId?: true
-    modelUsed?: true
+    model?: true
     tokensUsed?: true
     creditsUsed?: true
+    estimatedCost?: true
+    messageType?: true
+    success?: true
     domainId?: true
     userId?: true
+    usedAt?: true
     createdAt?: true
   }
 
   export type AiUsageMaxAggregateInputType = {
     id?: true
     chatMessageId?: true
-    modelUsed?: true
+    model?: true
     tokensUsed?: true
     creditsUsed?: true
+    estimatedCost?: true
+    messageType?: true
+    success?: true
     domainId?: true
     userId?: true
+    usedAt?: true
     createdAt?: true
   }
 
   export type AiUsageCountAggregateInputType = {
     id?: true
     chatMessageId?: true
-    modelUsed?: true
+    model?: true
     tokensUsed?: true
     creditsUsed?: true
+    estimatedCost?: true
+    messageType?: true
+    success?: true
     domainId?: true
     userId?: true
+    usedAt?: true
     createdAt?: true
     _all?: true
   }
@@ -13984,12 +14012,16 @@ export namespace Prisma {
 
   export type AiUsageGroupByOutputType = {
     id: string
-    chatMessageId: string
-    modelUsed: string
+    chatMessageId: string | null
+    model: string
     tokensUsed: number
     creditsUsed: number
-    domainId: string
+    estimatedCost: number
+    messageType: string
+    success: boolean
+    domainId: string | null
     userId: string
+    usedAt: Date
     createdAt: Date
     _count: AiUsageCountAggregateOutputType | null
     _avg: AiUsageAvgAggregateOutputType | null
@@ -14015,88 +14047,108 @@ export namespace Prisma {
   export type AiUsageSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     chatMessageId?: boolean
-    modelUsed?: boolean
+    model?: boolean
     tokensUsed?: boolean
     creditsUsed?: boolean
+    estimatedCost?: boolean
+    messageType?: boolean
+    success?: boolean
     domainId?: boolean
     userId?: boolean
+    usedAt?: boolean
     createdAt?: boolean
-    ChatMessage?: boolean | ChatMessageDefaultArgs<ExtArgs>
-    Domain?: boolean | DomainDefaultArgs<ExtArgs>
+    ChatMessage?: boolean | AiUsage$ChatMessageArgs<ExtArgs>
+    Domain?: boolean | AiUsage$DomainArgs<ExtArgs>
     User?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["aiUsage"]>
 
   export type AiUsageSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     chatMessageId?: boolean
-    modelUsed?: boolean
+    model?: boolean
     tokensUsed?: boolean
     creditsUsed?: boolean
+    estimatedCost?: boolean
+    messageType?: boolean
+    success?: boolean
     domainId?: boolean
     userId?: boolean
+    usedAt?: boolean
     createdAt?: boolean
-    ChatMessage?: boolean | ChatMessageDefaultArgs<ExtArgs>
-    Domain?: boolean | DomainDefaultArgs<ExtArgs>
+    ChatMessage?: boolean | AiUsage$ChatMessageArgs<ExtArgs>
+    Domain?: boolean | AiUsage$DomainArgs<ExtArgs>
     User?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["aiUsage"]>
 
   export type AiUsageSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     chatMessageId?: boolean
-    modelUsed?: boolean
+    model?: boolean
     tokensUsed?: boolean
     creditsUsed?: boolean
+    estimatedCost?: boolean
+    messageType?: boolean
+    success?: boolean
     domainId?: boolean
     userId?: boolean
+    usedAt?: boolean
     createdAt?: boolean
-    ChatMessage?: boolean | ChatMessageDefaultArgs<ExtArgs>
-    Domain?: boolean | DomainDefaultArgs<ExtArgs>
+    ChatMessage?: boolean | AiUsage$ChatMessageArgs<ExtArgs>
+    Domain?: boolean | AiUsage$DomainArgs<ExtArgs>
     User?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["aiUsage"]>
 
   export type AiUsageSelectScalar = {
     id?: boolean
     chatMessageId?: boolean
-    modelUsed?: boolean
+    model?: boolean
     tokensUsed?: boolean
     creditsUsed?: boolean
+    estimatedCost?: boolean
+    messageType?: boolean
+    success?: boolean
     domainId?: boolean
     userId?: boolean
+    usedAt?: boolean
     createdAt?: boolean
   }
 
-  export type AiUsageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "chatMessageId" | "modelUsed" | "tokensUsed" | "creditsUsed" | "domainId" | "userId" | "createdAt", ExtArgs["result"]["aiUsage"]>
+  export type AiUsageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "chatMessageId" | "model" | "tokensUsed" | "creditsUsed" | "estimatedCost" | "messageType" | "success" | "domainId" | "userId" | "usedAt" | "createdAt", ExtArgs["result"]["aiUsage"]>
   export type AiUsageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    ChatMessage?: boolean | ChatMessageDefaultArgs<ExtArgs>
-    Domain?: boolean | DomainDefaultArgs<ExtArgs>
+    ChatMessage?: boolean | AiUsage$ChatMessageArgs<ExtArgs>
+    Domain?: boolean | AiUsage$DomainArgs<ExtArgs>
     User?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type AiUsageIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    ChatMessage?: boolean | ChatMessageDefaultArgs<ExtArgs>
-    Domain?: boolean | DomainDefaultArgs<ExtArgs>
+    ChatMessage?: boolean | AiUsage$ChatMessageArgs<ExtArgs>
+    Domain?: boolean | AiUsage$DomainArgs<ExtArgs>
     User?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type AiUsageIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    ChatMessage?: boolean | ChatMessageDefaultArgs<ExtArgs>
-    Domain?: boolean | DomainDefaultArgs<ExtArgs>
+    ChatMessage?: boolean | AiUsage$ChatMessageArgs<ExtArgs>
+    Domain?: boolean | AiUsage$DomainArgs<ExtArgs>
     User?: boolean | UserDefaultArgs<ExtArgs>
   }
 
   export type $AiUsagePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "AiUsage"
     objects: {
-      ChatMessage: Prisma.$ChatMessagePayload<ExtArgs>
-      Domain: Prisma.$DomainPayload<ExtArgs>
+      ChatMessage: Prisma.$ChatMessagePayload<ExtArgs> | null
+      Domain: Prisma.$DomainPayload<ExtArgs> | null
       User: Prisma.$UserPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      chatMessageId: string
-      modelUsed: string
+      chatMessageId: string | null
+      model: string
       tokensUsed: number
       creditsUsed: number
-      domainId: string
+      estimatedCost: number
+      messageType: string
+      success: boolean
+      domainId: string | null
       userId: string
+      usedAt: Date
       createdAt: Date
     }, ExtArgs["result"]["aiUsage"]>
     composites: {}
@@ -14492,8 +14544,8 @@ export namespace Prisma {
    */
   export interface Prisma__AiUsageClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    ChatMessage<T extends ChatMessageDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ChatMessageDefaultArgs<ExtArgs>>): Prisma__ChatMessageClient<$Result.GetResult<Prisma.$ChatMessagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    Domain<T extends DomainDefaultArgs<ExtArgs> = {}>(args?: Subset<T, DomainDefaultArgs<ExtArgs>>): Prisma__DomainClient<$Result.GetResult<Prisma.$DomainPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    ChatMessage<T extends AiUsage$ChatMessageArgs<ExtArgs> = {}>(args?: Subset<T, AiUsage$ChatMessageArgs<ExtArgs>>): Prisma__ChatMessageClient<$Result.GetResult<Prisma.$ChatMessagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    Domain<T extends AiUsage$DomainArgs<ExtArgs> = {}>(args?: Subset<T, AiUsage$DomainArgs<ExtArgs>>): Prisma__DomainClient<$Result.GetResult<Prisma.$DomainPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     User<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -14526,11 +14578,15 @@ export namespace Prisma {
   interface AiUsageFieldRefs {
     readonly id: FieldRef<"AiUsage", 'String'>
     readonly chatMessageId: FieldRef<"AiUsage", 'String'>
-    readonly modelUsed: FieldRef<"AiUsage", 'String'>
+    readonly model: FieldRef<"AiUsage", 'String'>
     readonly tokensUsed: FieldRef<"AiUsage", 'Int'>
     readonly creditsUsed: FieldRef<"AiUsage", 'Int'>
+    readonly estimatedCost: FieldRef<"AiUsage", 'Float'>
+    readonly messageType: FieldRef<"AiUsage", 'String'>
+    readonly success: FieldRef<"AiUsage", 'Boolean'>
     readonly domainId: FieldRef<"AiUsage", 'String'>
     readonly userId: FieldRef<"AiUsage", 'String'>
+    readonly usedAt: FieldRef<"AiUsage", 'DateTime'>
     readonly createdAt: FieldRef<"AiUsage", 'DateTime'>
   }
     
@@ -14925,6 +14981,44 @@ export namespace Prisma {
      * Limit how many AiUsages to delete.
      */
     limit?: number
+  }
+
+  /**
+   * AiUsage.ChatMessage
+   */
+  export type AiUsage$ChatMessageArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChatMessage
+     */
+    select?: ChatMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChatMessage
+     */
+    omit?: ChatMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChatMessageInclude<ExtArgs> | null
+    where?: ChatMessageWhereInput
+  }
+
+  /**
+   * AiUsage.Domain
+   */
+  export type AiUsage$DomainArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Domain
+     */
+    select?: DomainSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Domain
+     */
+    omit?: DomainOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DomainInclude<ExtArgs> | null
+    where?: DomainWhereInput
   }
 
   /**
@@ -19623,11 +19717,15 @@ export namespace Prisma {
   export const AiUsageScalarFieldEnum: {
     id: 'id',
     chatMessageId: 'chatMessageId',
-    modelUsed: 'modelUsed',
+    model: 'model',
     tokensUsed: 'tokensUsed',
     creditsUsed: 'creditsUsed',
+    estimatedCost: 'estimatedCost',
+    messageType: 'messageType',
+    success: 'success',
     domainId: 'domainId',
     userId: 'userId',
+    usedAt: 'usedAt',
     createdAt: 'createdAt'
   };
 
@@ -20499,26 +20597,34 @@ export namespace Prisma {
     OR?: AiUsageWhereInput[]
     NOT?: AiUsageWhereInput | AiUsageWhereInput[]
     id?: UuidFilter<"AiUsage"> | string
-    chatMessageId?: UuidFilter<"AiUsage"> | string
-    modelUsed?: StringFilter<"AiUsage"> | string
+    chatMessageId?: UuidNullableFilter<"AiUsage"> | string | null
+    model?: StringFilter<"AiUsage"> | string
     tokensUsed?: IntFilter<"AiUsage"> | number
     creditsUsed?: IntFilter<"AiUsage"> | number
-    domainId?: UuidFilter<"AiUsage"> | string
+    estimatedCost?: FloatFilter<"AiUsage"> | number
+    messageType?: StringFilter<"AiUsage"> | string
+    success?: BoolFilter<"AiUsage"> | boolean
+    domainId?: UuidNullableFilter<"AiUsage"> | string | null
     userId?: UuidFilter<"AiUsage"> | string
+    usedAt?: DateTimeFilter<"AiUsage"> | Date | string
     createdAt?: DateTimeFilter<"AiUsage"> | Date | string
-    ChatMessage?: XOR<ChatMessageScalarRelationFilter, ChatMessageWhereInput>
-    Domain?: XOR<DomainScalarRelationFilter, DomainWhereInput>
+    ChatMessage?: XOR<ChatMessageNullableScalarRelationFilter, ChatMessageWhereInput> | null
+    Domain?: XOR<DomainNullableScalarRelationFilter, DomainWhereInput> | null
     User?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
 
   export type AiUsageOrderByWithRelationInput = {
     id?: SortOrder
-    chatMessageId?: SortOrder
-    modelUsed?: SortOrder
+    chatMessageId?: SortOrderInput | SortOrder
+    model?: SortOrder
     tokensUsed?: SortOrder
     creditsUsed?: SortOrder
-    domainId?: SortOrder
+    estimatedCost?: SortOrder
+    messageType?: SortOrder
+    success?: SortOrder
+    domainId?: SortOrderInput | SortOrder
     userId?: SortOrder
+    usedAt?: SortOrder
     createdAt?: SortOrder
     ChatMessage?: ChatMessageOrderByWithRelationInput
     Domain?: DomainOrderByWithRelationInput
@@ -20531,25 +20637,33 @@ export namespace Prisma {
     AND?: AiUsageWhereInput | AiUsageWhereInput[]
     OR?: AiUsageWhereInput[]
     NOT?: AiUsageWhereInput | AiUsageWhereInput[]
-    modelUsed?: StringFilter<"AiUsage"> | string
+    model?: StringFilter<"AiUsage"> | string
     tokensUsed?: IntFilter<"AiUsage"> | number
     creditsUsed?: IntFilter<"AiUsage"> | number
-    domainId?: UuidFilter<"AiUsage"> | string
+    estimatedCost?: FloatFilter<"AiUsage"> | number
+    messageType?: StringFilter<"AiUsage"> | string
+    success?: BoolFilter<"AiUsage"> | boolean
+    domainId?: UuidNullableFilter<"AiUsage"> | string | null
     userId?: UuidFilter<"AiUsage"> | string
+    usedAt?: DateTimeFilter<"AiUsage"> | Date | string
     createdAt?: DateTimeFilter<"AiUsage"> | Date | string
-    ChatMessage?: XOR<ChatMessageScalarRelationFilter, ChatMessageWhereInput>
-    Domain?: XOR<DomainScalarRelationFilter, DomainWhereInput>
+    ChatMessage?: XOR<ChatMessageNullableScalarRelationFilter, ChatMessageWhereInput> | null
+    Domain?: XOR<DomainNullableScalarRelationFilter, DomainWhereInput> | null
     User?: XOR<UserScalarRelationFilter, UserWhereInput>
   }, "id" | "chatMessageId">
 
   export type AiUsageOrderByWithAggregationInput = {
     id?: SortOrder
-    chatMessageId?: SortOrder
-    modelUsed?: SortOrder
+    chatMessageId?: SortOrderInput | SortOrder
+    model?: SortOrder
     tokensUsed?: SortOrder
     creditsUsed?: SortOrder
-    domainId?: SortOrder
+    estimatedCost?: SortOrder
+    messageType?: SortOrder
+    success?: SortOrder
+    domainId?: SortOrderInput | SortOrder
     userId?: SortOrder
+    usedAt?: SortOrder
     createdAt?: SortOrder
     _count?: AiUsageCountOrderByAggregateInput
     _avg?: AiUsageAvgOrderByAggregateInput
@@ -20563,12 +20677,16 @@ export namespace Prisma {
     OR?: AiUsageScalarWhereWithAggregatesInput[]
     NOT?: AiUsageScalarWhereWithAggregatesInput | AiUsageScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"AiUsage"> | string
-    chatMessageId?: UuidWithAggregatesFilter<"AiUsage"> | string
-    modelUsed?: StringWithAggregatesFilter<"AiUsage"> | string
+    chatMessageId?: UuidNullableWithAggregatesFilter<"AiUsage"> | string | null
+    model?: StringWithAggregatesFilter<"AiUsage"> | string
     tokensUsed?: IntWithAggregatesFilter<"AiUsage"> | number
     creditsUsed?: IntWithAggregatesFilter<"AiUsage"> | number
-    domainId?: UuidWithAggregatesFilter<"AiUsage"> | string
+    estimatedCost?: FloatWithAggregatesFilter<"AiUsage"> | number
+    messageType?: StringWithAggregatesFilter<"AiUsage"> | string
+    success?: BoolWithAggregatesFilter<"AiUsage"> | boolean
+    domainId?: UuidNullableWithAggregatesFilter<"AiUsage"> | string | null
     userId?: UuidWithAggregatesFilter<"AiUsage"> | string
+    usedAt?: DateTimeWithAggregatesFilter<"AiUsage"> | Date | string
     createdAt?: DateTimeWithAggregatesFilter<"AiUsage"> | Date | string
   }
 
@@ -21603,75 +21721,103 @@ export namespace Prisma {
 
   export type AiUsageCreateInput = {
     id?: string
-    modelUsed: string
+    model: string
     tokensUsed: number
     creditsUsed?: number
+    estimatedCost?: number
+    messageType?: string
+    success?: boolean
+    usedAt?: Date | string
     createdAt?: Date | string
-    ChatMessage: ChatMessageCreateNestedOneWithoutAiUsageInput
-    Domain: DomainCreateNestedOneWithoutAiUsageInput
+    ChatMessage?: ChatMessageCreateNestedOneWithoutAiUsageInput
+    Domain?: DomainCreateNestedOneWithoutAiUsageInput
     User: UserCreateNestedOneWithoutAiUsageInput
   }
 
   export type AiUsageUncheckedCreateInput = {
     id?: string
-    chatMessageId: string
-    modelUsed: string
+    chatMessageId?: string | null
+    model: string
     tokensUsed: number
     creditsUsed?: number
-    domainId: string
+    estimatedCost?: number
+    messageType?: string
+    success?: boolean
+    domainId?: string | null
     userId: string
+    usedAt?: Date | string
     createdAt?: Date | string
   }
 
   export type AiUsageUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    modelUsed?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
     tokensUsed?: IntFieldUpdateOperationsInput | number
     creditsUsed?: IntFieldUpdateOperationsInput | number
+    estimatedCost?: FloatFieldUpdateOperationsInput | number
+    messageType?: StringFieldUpdateOperationsInput | string
+    success?: BoolFieldUpdateOperationsInput | boolean
+    usedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    ChatMessage?: ChatMessageUpdateOneRequiredWithoutAiUsageNestedInput
-    Domain?: DomainUpdateOneRequiredWithoutAiUsageNestedInput
+    ChatMessage?: ChatMessageUpdateOneWithoutAiUsageNestedInput
+    Domain?: DomainUpdateOneWithoutAiUsageNestedInput
     User?: UserUpdateOneRequiredWithoutAiUsageNestedInput
   }
 
   export type AiUsageUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    chatMessageId?: StringFieldUpdateOperationsInput | string
-    modelUsed?: StringFieldUpdateOperationsInput | string
+    chatMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: StringFieldUpdateOperationsInput | string
     tokensUsed?: IntFieldUpdateOperationsInput | number
     creditsUsed?: IntFieldUpdateOperationsInput | number
-    domainId?: StringFieldUpdateOperationsInput | string
+    estimatedCost?: FloatFieldUpdateOperationsInput | number
+    messageType?: StringFieldUpdateOperationsInput | string
+    success?: BoolFieldUpdateOperationsInput | boolean
+    domainId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: StringFieldUpdateOperationsInput | string
+    usedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AiUsageCreateManyInput = {
     id?: string
-    chatMessageId: string
-    modelUsed: string
+    chatMessageId?: string | null
+    model: string
     tokensUsed: number
     creditsUsed?: number
-    domainId: string
+    estimatedCost?: number
+    messageType?: string
+    success?: boolean
+    domainId?: string | null
     userId: string
+    usedAt?: Date | string
     createdAt?: Date | string
   }
 
   export type AiUsageUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    modelUsed?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
     tokensUsed?: IntFieldUpdateOperationsInput | number
     creditsUsed?: IntFieldUpdateOperationsInput | number
+    estimatedCost?: FloatFieldUpdateOperationsInput | number
+    messageType?: StringFieldUpdateOperationsInput | string
+    success?: BoolFieldUpdateOperationsInput | boolean
+    usedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AiUsageUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    chatMessageId?: StringFieldUpdateOperationsInput | string
-    modelUsed?: StringFieldUpdateOperationsInput | string
+    chatMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: StringFieldUpdateOperationsInput | string
     tokensUsed?: IntFieldUpdateOperationsInput | number
     creditsUsed?: IntFieldUpdateOperationsInput | number
-    domainId?: StringFieldUpdateOperationsInput | string
+    estimatedCost?: FloatFieldUpdateOperationsInput | number
+    messageType?: StringFieldUpdateOperationsInput | string
+    success?: BoolFieldUpdateOperationsInput | boolean
+    domainId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: StringFieldUpdateOperationsInput | string
+    usedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -22704,9 +22850,20 @@ export namespace Prisma {
     _max?: NestedEnumRoleNullableFilter<$PrismaModel>
   }
 
-  export type ChatMessageScalarRelationFilter = {
-    is?: ChatMessageWhereInput
-    isNot?: ChatMessageWhereInput
+  export type FloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type ChatMessageNullableScalarRelationFilter = {
+    is?: ChatMessageWhereInput | null
+    isNot?: ChatMessageWhereInput | null
   }
 
   export type UserScalarRelationFilter = {
@@ -22717,44 +22874,74 @@ export namespace Prisma {
   export type AiUsageCountOrderByAggregateInput = {
     id?: SortOrder
     chatMessageId?: SortOrder
-    modelUsed?: SortOrder
+    model?: SortOrder
     tokensUsed?: SortOrder
     creditsUsed?: SortOrder
+    estimatedCost?: SortOrder
+    messageType?: SortOrder
+    success?: SortOrder
     domainId?: SortOrder
     userId?: SortOrder
+    usedAt?: SortOrder
     createdAt?: SortOrder
   }
 
   export type AiUsageAvgOrderByAggregateInput = {
     tokensUsed?: SortOrder
     creditsUsed?: SortOrder
+    estimatedCost?: SortOrder
   }
 
   export type AiUsageMaxOrderByAggregateInput = {
     id?: SortOrder
     chatMessageId?: SortOrder
-    modelUsed?: SortOrder
+    model?: SortOrder
     tokensUsed?: SortOrder
     creditsUsed?: SortOrder
+    estimatedCost?: SortOrder
+    messageType?: SortOrder
+    success?: SortOrder
     domainId?: SortOrder
     userId?: SortOrder
+    usedAt?: SortOrder
     createdAt?: SortOrder
   }
 
   export type AiUsageMinOrderByAggregateInput = {
     id?: SortOrder
     chatMessageId?: SortOrder
-    modelUsed?: SortOrder
+    model?: SortOrder
     tokensUsed?: SortOrder
     creditsUsed?: SortOrder
+    estimatedCost?: SortOrder
+    messageType?: SortOrder
+    success?: SortOrder
     domainId?: SortOrder
     userId?: SortOrder
+    usedAt?: SortOrder
     createdAt?: SortOrder
   }
 
   export type AiUsageSumOrderByAggregateInput = {
     tokensUsed?: SortOrder
     creditsUsed?: SortOrder
+    estimatedCost?: SortOrder
+  }
+
+  export type FloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
   }
 
   export type SatisfactionRatingCountOrderByAggregateInput = {
@@ -23793,18 +23980,30 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
-  export type ChatMessageUpdateOneRequiredWithoutAiUsageNestedInput = {
+  export type FloatFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type ChatMessageUpdateOneWithoutAiUsageNestedInput = {
     create?: XOR<ChatMessageCreateWithoutAiUsageInput, ChatMessageUncheckedCreateWithoutAiUsageInput>
     connectOrCreate?: ChatMessageCreateOrConnectWithoutAiUsageInput
     upsert?: ChatMessageUpsertWithoutAiUsageInput
+    disconnect?: ChatMessageWhereInput | boolean
+    delete?: ChatMessageWhereInput | boolean
     connect?: ChatMessageWhereUniqueInput
     update?: XOR<XOR<ChatMessageUpdateToOneWithWhereWithoutAiUsageInput, ChatMessageUpdateWithoutAiUsageInput>, ChatMessageUncheckedUpdateWithoutAiUsageInput>
   }
 
-  export type DomainUpdateOneRequiredWithoutAiUsageNestedInput = {
+  export type DomainUpdateOneWithoutAiUsageNestedInput = {
     create?: XOR<DomainCreateWithoutAiUsageInput, DomainUncheckedCreateWithoutAiUsageInput>
     connectOrCreate?: DomainCreateOrConnectWithoutAiUsageInput
     upsert?: DomainUpsertWithoutAiUsageInput
+    disconnect?: DomainWhereInput | boolean
+    delete?: DomainWhereInput | boolean
     connect?: DomainWhereUniqueInput
     update?: XOR<XOR<DomainUpdateToOneWithWhereWithoutAiUsageInput, DomainUpdateWithoutAiUsageInput>, DomainUncheckedUpdateWithoutAiUsageInput>
   }
@@ -24216,6 +24415,22 @@ export namespace Prisma {
     _max?: NestedEnumRoleNullableFilter<$PrismaModel>
   }
 
+  export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
+
   export type BillingsCreateWithoutUserInput = {
     id?: string
     plan?: $Enums.Plans
@@ -24293,21 +24508,29 @@ export namespace Prisma {
 
   export type AiUsageCreateWithoutUserInput = {
     id?: string
-    modelUsed: string
+    model: string
     tokensUsed: number
     creditsUsed?: number
+    estimatedCost?: number
+    messageType?: string
+    success?: boolean
+    usedAt?: Date | string
     createdAt?: Date | string
-    ChatMessage: ChatMessageCreateNestedOneWithoutAiUsageInput
-    Domain: DomainCreateNestedOneWithoutAiUsageInput
+    ChatMessage?: ChatMessageCreateNestedOneWithoutAiUsageInput
+    Domain?: DomainCreateNestedOneWithoutAiUsageInput
   }
 
   export type AiUsageUncheckedCreateWithoutUserInput = {
     id?: string
-    chatMessageId: string
-    modelUsed: string
+    chatMessageId?: string | null
+    model: string
     tokensUsed: number
     creditsUsed?: number
-    domainId: string
+    estimatedCost?: number
+    messageType?: string
+    success?: boolean
+    domainId?: string | null
+    usedAt?: Date | string
     createdAt?: Date | string
   }
 
@@ -24476,12 +24699,16 @@ export namespace Prisma {
     OR?: AiUsageScalarWhereInput[]
     NOT?: AiUsageScalarWhereInput | AiUsageScalarWhereInput[]
     id?: UuidFilter<"AiUsage"> | string
-    chatMessageId?: UuidFilter<"AiUsage"> | string
-    modelUsed?: StringFilter<"AiUsage"> | string
+    chatMessageId?: UuidNullableFilter<"AiUsage"> | string | null
+    model?: StringFilter<"AiUsage"> | string
     tokensUsed?: IntFilter<"AiUsage"> | number
     creditsUsed?: IntFilter<"AiUsage"> | number
-    domainId?: UuidFilter<"AiUsage"> | string
+    estimatedCost?: FloatFilter<"AiUsage"> | number
+    messageType?: StringFilter<"AiUsage"> | string
+    success?: BoolFilter<"AiUsage"> | boolean
+    domainId?: UuidNullableFilter<"AiUsage"> | string | null
     userId?: UuidFilter<"AiUsage"> | string
+    usedAt?: DateTimeFilter<"AiUsage"> | Date | string
     createdAt?: DateTimeFilter<"AiUsage"> | Date | string
   }
 
@@ -24689,21 +24916,29 @@ export namespace Prisma {
 
   export type AiUsageCreateWithoutDomainInput = {
     id?: string
-    modelUsed: string
+    model: string
     tokensUsed: number
     creditsUsed?: number
+    estimatedCost?: number
+    messageType?: string
+    success?: boolean
+    usedAt?: Date | string
     createdAt?: Date | string
-    ChatMessage: ChatMessageCreateNestedOneWithoutAiUsageInput
+    ChatMessage?: ChatMessageCreateNestedOneWithoutAiUsageInput
     User: UserCreateNestedOneWithoutAiUsageInput
   }
 
   export type AiUsageUncheckedCreateWithoutDomainInput = {
     id?: string
-    chatMessageId: string
-    modelUsed: string
+    chatMessageId?: string | null
+    model: string
     tokensUsed: number
     creditsUsed?: number
+    estimatedCost?: number
+    messageType?: string
+    success?: boolean
     userId: string
+    usedAt?: Date | string
     createdAt?: Date | string
   }
 
@@ -25700,21 +25935,29 @@ export namespace Prisma {
 
   export type AiUsageCreateWithoutChatMessageInput = {
     id?: string
-    modelUsed: string
+    model: string
     tokensUsed: number
     creditsUsed?: number
+    estimatedCost?: number
+    messageType?: string
+    success?: boolean
+    usedAt?: Date | string
     createdAt?: Date | string
-    Domain: DomainCreateNestedOneWithoutAiUsageInput
+    Domain?: DomainCreateNestedOneWithoutAiUsageInput
     User: UserCreateNestedOneWithoutAiUsageInput
   }
 
   export type AiUsageUncheckedCreateWithoutChatMessageInput = {
     id?: string
-    modelUsed: string
+    model: string
     tokensUsed: number
     creditsUsed?: number
-    domainId: string
+    estimatedCost?: number
+    messageType?: string
+    success?: boolean
+    domainId?: string | null
     userId: string
+    usedAt?: Date | string
     createdAt?: Date | string
   }
 
@@ -25765,21 +26008,29 @@ export namespace Prisma {
 
   export type AiUsageUpdateWithoutChatMessageInput = {
     id?: StringFieldUpdateOperationsInput | string
-    modelUsed?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
     tokensUsed?: IntFieldUpdateOperationsInput | number
     creditsUsed?: IntFieldUpdateOperationsInput | number
+    estimatedCost?: FloatFieldUpdateOperationsInput | number
+    messageType?: StringFieldUpdateOperationsInput | string
+    success?: BoolFieldUpdateOperationsInput | boolean
+    usedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    Domain?: DomainUpdateOneRequiredWithoutAiUsageNestedInput
+    Domain?: DomainUpdateOneWithoutAiUsageNestedInput
     User?: UserUpdateOneRequiredWithoutAiUsageNestedInput
   }
 
   export type AiUsageUncheckedUpdateWithoutChatMessageInput = {
     id?: StringFieldUpdateOperationsInput | string
-    modelUsed?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
     tokensUsed?: IntFieldUpdateOperationsInput | number
     creditsUsed?: IntFieldUpdateOperationsInput | number
-    domainId?: StringFieldUpdateOperationsInput | string
+    estimatedCost?: FloatFieldUpdateOperationsInput | number
+    messageType?: StringFieldUpdateOperationsInput | string
+    success?: BoolFieldUpdateOperationsInput | boolean
+    domainId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: StringFieldUpdateOperationsInput | string
+    usedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -26440,11 +26691,15 @@ export namespace Prisma {
 
   export type AiUsageCreateManyUserInput = {
     id?: string
-    chatMessageId: string
-    modelUsed: string
+    chatMessageId?: string | null
+    model: string
     tokensUsed: number
     creditsUsed?: number
-    domainId: string
+    estimatedCost?: number
+    messageType?: string
+    success?: boolean
+    domainId?: string | null
+    usedAt?: Date | string
     createdAt?: Date | string
   }
 
@@ -26495,31 +26750,43 @@ export namespace Prisma {
 
   export type AiUsageUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
-    modelUsed?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
     tokensUsed?: IntFieldUpdateOperationsInput | number
     creditsUsed?: IntFieldUpdateOperationsInput | number
+    estimatedCost?: FloatFieldUpdateOperationsInput | number
+    messageType?: StringFieldUpdateOperationsInput | string
+    success?: BoolFieldUpdateOperationsInput | boolean
+    usedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    ChatMessage?: ChatMessageUpdateOneRequiredWithoutAiUsageNestedInput
-    Domain?: DomainUpdateOneRequiredWithoutAiUsageNestedInput
+    ChatMessage?: ChatMessageUpdateOneWithoutAiUsageNestedInput
+    Domain?: DomainUpdateOneWithoutAiUsageNestedInput
   }
 
   export type AiUsageUncheckedUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
-    chatMessageId?: StringFieldUpdateOperationsInput | string
-    modelUsed?: StringFieldUpdateOperationsInput | string
+    chatMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: StringFieldUpdateOperationsInput | string
     tokensUsed?: IntFieldUpdateOperationsInput | number
     creditsUsed?: IntFieldUpdateOperationsInput | number
-    domainId?: StringFieldUpdateOperationsInput | string
+    estimatedCost?: FloatFieldUpdateOperationsInput | number
+    messageType?: StringFieldUpdateOperationsInput | string
+    success?: BoolFieldUpdateOperationsInput | boolean
+    domainId?: NullableStringFieldUpdateOperationsInput | string | null
+    usedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AiUsageUncheckedUpdateManyWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
-    chatMessageId?: StringFieldUpdateOperationsInput | string
-    modelUsed?: StringFieldUpdateOperationsInput | string
+    chatMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: StringFieldUpdateOperationsInput | string
     tokensUsed?: IntFieldUpdateOperationsInput | number
     creditsUsed?: IntFieldUpdateOperationsInput | number
-    domainId?: StringFieldUpdateOperationsInput | string
+    estimatedCost?: FloatFieldUpdateOperationsInput | number
+    messageType?: StringFieldUpdateOperationsInput | string
+    success?: BoolFieldUpdateOperationsInput | boolean
+    domainId?: NullableStringFieldUpdateOperationsInput | string | null
+    usedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -26586,11 +26853,15 @@ export namespace Prisma {
 
   export type AiUsageCreateManyDomainInput = {
     id?: string
-    chatMessageId: string
-    modelUsed: string
+    chatMessageId?: string | null
+    model: string
     tokensUsed: number
     creditsUsed?: number
+    estimatedCost?: number
+    messageType?: string
+    success?: boolean
     userId: string
+    usedAt?: Date | string
     createdAt?: Date | string
   }
 
@@ -26690,31 +26961,43 @@ export namespace Prisma {
 
   export type AiUsageUpdateWithoutDomainInput = {
     id?: StringFieldUpdateOperationsInput | string
-    modelUsed?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
     tokensUsed?: IntFieldUpdateOperationsInput | number
     creditsUsed?: IntFieldUpdateOperationsInput | number
+    estimatedCost?: FloatFieldUpdateOperationsInput | number
+    messageType?: StringFieldUpdateOperationsInput | string
+    success?: BoolFieldUpdateOperationsInput | boolean
+    usedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    ChatMessage?: ChatMessageUpdateOneRequiredWithoutAiUsageNestedInput
+    ChatMessage?: ChatMessageUpdateOneWithoutAiUsageNestedInput
     User?: UserUpdateOneRequiredWithoutAiUsageNestedInput
   }
 
   export type AiUsageUncheckedUpdateWithoutDomainInput = {
     id?: StringFieldUpdateOperationsInput | string
-    chatMessageId?: StringFieldUpdateOperationsInput | string
-    modelUsed?: StringFieldUpdateOperationsInput | string
+    chatMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: StringFieldUpdateOperationsInput | string
     tokensUsed?: IntFieldUpdateOperationsInput | number
     creditsUsed?: IntFieldUpdateOperationsInput | number
+    estimatedCost?: FloatFieldUpdateOperationsInput | number
+    messageType?: StringFieldUpdateOperationsInput | string
+    success?: BoolFieldUpdateOperationsInput | boolean
     userId?: StringFieldUpdateOperationsInput | string
+    usedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AiUsageUncheckedUpdateManyWithoutDomainInput = {
     id?: StringFieldUpdateOperationsInput | string
-    chatMessageId?: StringFieldUpdateOperationsInput | string
-    modelUsed?: StringFieldUpdateOperationsInput | string
+    chatMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    model?: StringFieldUpdateOperationsInput | string
     tokensUsed?: IntFieldUpdateOperationsInput | number
     creditsUsed?: IntFieldUpdateOperationsInput | number
+    estimatedCost?: FloatFieldUpdateOperationsInput | number
+    messageType?: StringFieldUpdateOperationsInput | string
+    success?: BoolFieldUpdateOperationsInput | boolean
     userId?: StringFieldUpdateOperationsInput | string
+    usedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

@@ -3,6 +3,7 @@ export const getPlanLimits = (plan: string) => {
     STARTER: {
       name: "Starter Plan",
       price: "Free Trial - 14 Days",
+      usdPrice: 0, // Free trial
       aiCredits: 50,
       emailCredits: 50,
       domainLimit: 1, // Free trial users can add 1 domain
@@ -16,6 +17,8 @@ export const getPlanLimits = (plan: string) => {
     GROWTH: {
       name: "Growth Plan",
       price: "$12/month",
+      usdPrice: 12,
+      usdAnnualPrice: Math.round(12 * 12 * 0.9), // 12 months with 10% discount
       aiCredits: 100,
       emailCredits: 200,
       domainLimit: 2, // Growth plan users can add 2 domains
@@ -31,6 +34,8 @@ export const getPlanLimits = (plan: string) => {
     PRO: {
       name: "Pro Plan",
       price: "$39/month",
+      usdPrice: 39,
+      usdAnnualPrice: Math.round(39 * 12 * 0.9), // 12 months with 10% discount
       aiCredits: 500,
       emailCredits: 1000,
       domainLimit: 5, // Pro plan users can add up to 5 domains
@@ -77,6 +82,8 @@ export type PlanType = "STARTER" | "GROWTH" | "PRO";
 export interface PlanDetails {
   name: string;
   price: string;
+  usdPrice: number;
+  usdAnnualPrice?: number;
   aiCredits: number;
   emailCredits: number;
   domainLimit: number;

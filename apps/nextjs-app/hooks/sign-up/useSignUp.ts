@@ -158,6 +158,7 @@ export const useSignUpForm = () => {
           );
 
           if (registered?.status === 200 && registered.user) {
+            // ✅ NEW: Set active session first
             await setActive({
               session: completeSignUp.createdSessionId,
             });
@@ -168,7 +169,11 @@ export const useSignUpForm = () => {
             });
 
             console.log("🎉 Registration complete, redirecting to dashboard");
-            router.push("/dashboard");
+
+            // ✅ NEW: Add delay to ensure session is set
+            setTimeout(() => {
+              router.push("/dashboard");
+            }, 1000);
           } else {
             toast.error("Registration failed", {
               description: "Failed to create your account. Please try again.",

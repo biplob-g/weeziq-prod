@@ -1,9 +1,7 @@
 import {
   onGetChatMessages,
   onGetDomainChatRooms,
-  onOwnerSendMessage,
   onViewUnReadMessages,
-  onRealTimeChat,
 } from "@/actions/conversation";
 import { useChatContext } from "@/context/useChatContext";
 import { getMonthName } from "@/lib/utils";
@@ -192,10 +190,13 @@ export const useChatWindow = () => {
     if (chatRoom) {
       console.log(`🎯 Setting up Socket.io for room: ${chatRoom}`);
 
-      // Join the chat room
-      socketClient.joinRoom(chatRoom, "admin", "Admin User");
+      // Join the chat room with a small delay to ensure proper setup
+      setTimeout(() => {
+        console.log(`🎯 Conversation page joining room: ${chatRoom}`);
+        socketClient.joinRoom(chatRoom, "admin", "Admin User");
+      }, 100);
 
-      // Listen for new messages
+      // ✅ FIXED: Listen for new messages (both user and AI) - WhatsApp-style
       socketClient.onNewMessage(
         (data: {
           id: string;
@@ -205,13 +206,34 @@ export const useChatWindow = () => {
           userId: string;
           userName: string;
         }) => {
-          console.log("📨 New message received:", data);
+          console.log("🔔 Received realtime message:", data);
+
+          // Add message to current chat
           setChats((prev) => [
             ...prev,
             {
-              id: data.id,
+              id: data.id || `temp-${Date.now()}`,
               message: data.message,
-              role: data.role === "assistant" ? "assistant" : "user",
+              role: data.role === "OWNER" ? "assistant" : "user",
+              createdAt: new Date(data.timestamp),
+              seen: false,
+            },
+          ]);
+        }
+      );
+
+      // Listen for AI responses
+      socketClient.onAIResponse(
+        (data: { message: string; role: string; timestamp: string }) => {
+          console.log("🤖 Received AI response:", data);
+
+          // Add AI response to current chat
+          setChats((prev) => [
+            ...prev,
+            {
+              id: `ai-${Date.now()}`,
+              message: data.message,
+              role: "assistant",
               createdAt: new Date(data.timestamp),
               seen: false,
             },
@@ -255,6 +277,8 @@ export const useChatWindow = () => {
         console.log(`👋 Leaving Socket.io room: ${chatRoom}`);
         socketClient.leaveRoom(chatRoom);
         socketClient.offNewMessage();
+        socketClient.offAIResponse();
+        socketClient.offMessageStored();
         socketClient.offUserJoined();
         socketClient.offUserLeft();
         socketClient.offUserTyping();
@@ -294,45 +318,61 @@ export const useChatWindow = () => {
         return;
       }
 
-      const message = await onOwnerSendMessage(
-        chatRoom,
-        values.content,
-        "assistant"
-      );
+      // ✅ NEW: Create optimistic message for immediate display
+      const optimisticMessage = {
+        id: `temp-${Date.now()}`,
+        message: values.content,
+        role: "assistant" as const,
+        createdAt: new Date(),
+        seen: false,
+        isOptimistic: true, // Mark as optimistic
+      };
 
-      if (message) {
-        // ✅ FIXED: Don't manually add to chats array - let the database fetch handle it
-        // This prevents duplicate messages
+      // ✅ NEW: Add optimistic message immediately
+      setChats((prev) => [...prev, optimisticMessage]);
+
+      // ✅ NEW: Clear input immediately for better UX
+      reset();
+
+      // Send message via WebSocket for storage and broadcasting
+      if (chatRoom) {
         console.log(
-          "✅ Message sent successfully, will be fetched from database"
+          "✅ Admin sending message via WebSocket to room:",
+          chatRoom
         );
 
-        // ✅ Clear the input field
-        reset();
-
-        // ✅ Socket.io: Send real-time message
-        const realtimeResult = await onRealTimeChat(
-          chatRoom!,
-          message.message[0].message,
-          message.message[0].id,
-          "assistant",
+        // ✅ FIXED: Send via WebSocket for storage and broadcasting
+        socketClient.sendMessageWithDomain(
+          chatRoom,
+          values.content,
           "admin",
-          "Admin User"
+          "Admin User",
+          "assistant"
         );
 
-        // ✅ Also send via Socket.io client for immediate broadcast
-        if (realtimeResult.success) {
-          socketClient.sendMessage(
-            chatRoom!,
-            message.message[0].message,
-            "admin",
-            "Admin User",
-            "assistant"
-          );
-        }
+        // ✅ NEW: Replace optimistic message with real message (will be updated when we get confirmation)
+        setChats((prev) =>
+          prev.map((chat) =>
+            chat.isOptimistic
+              ? {
+                  id: `temp-${Date.now()}`,
+                  message: values.content,
+                  role: "assistant" as const,
+                  createdAt: new Date(),
+                  seen: false,
+                }
+              : chat
+          )
+        );
+      } else {
+        // ✅ NEW: Remove optimistic message if sending failed
+        setChats((prev) => prev.filter((chat) => !chat.isOptimistic));
+        console.error("❌ No chat room available");
       }
     } catch (error) {
-      console.log(error);
+      console.error("❌ Error sending message:", error);
+      // ✅ NEW: Remove optimistic message on error
+      setChats((prev) => prev.filter((chat) => !chat.isOptimistic));
     }
   });
 

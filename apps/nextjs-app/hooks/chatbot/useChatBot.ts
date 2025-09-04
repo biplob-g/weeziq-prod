@@ -29,30 +29,11 @@ import type { ChatbotPage, ChatbotPageState } from "./types";
 
 export type { ChatbotPage } from "./types";
 
-const upload = new UploadClient({
+const _upload = new UploadClient({
   publicKey: process.env.NEXT_PUBLIC_UPLOAD_CARE_PUBLIC_KEY as string,
 });
 
-// ✅ FIXED: Global request lock to prevent multiple simultaneous requests
-const globalRequestLock = new Map<string, boolean>();
-
-// ✅ FIXED: Global cache for IP detection results to prevent repeated calls
-const ipDetectionCache = new Map<string, { result: any; timestamp: number }>();
-
-// ✅ FIXED: Global request counter to limit total requests
-const requestCounter = new Map<
-  string,
-  { count: number; firstRequest: number }
->();
-const MAX_REQUESTS_PER_MINUTE = 3;
-
 export const useChatBot = () => {
-  // ✅ FIXED: Add request deduplication to prevent multiple simultaneous calls
-  const [pendingRequests, setPendingRequests] = useState<Set<string>>(
-    new Set()
-  );
-  const [lastRequestTime, setLastRequestTime] = useState<number>(0);
-
   const { register, handleSubmit, reset } = useForm<ChatBotMessageProps>({
     // @ts-expect-error - Type compatibility issue between Zod and React Hook Form resolver
     resolver: zodResolver(ChatBotMessageSchema),
@@ -68,6 +49,7 @@ export const useChatBot = () => {
           background: string | null;
           textColor: string | null;
           helpdesk: boolean;
+          taskSummary: string | null;
         } | null;
         helpdesk: {
           id: string;
@@ -81,6 +63,34 @@ export const useChatBot = () => {
 
   const messageWindowRef = useRef<HTMLDivElement | null>(null);
   const [botOpened, setBotOpened] = useState<boolean>(false);
+
+  // ✅ NEW: Chat history state for multiple chat rooms
+  const [allChatRooms, setAllChatRooms] = useState<Array<{
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    message: Array<{
+      id: string;
+      message: string;
+      role: "OWNER" | "CUSTOMER";
+      createdAt: Date;
+    }>;
+  }> | null>(null);
+
+  // ✅ NEW: Current chat room ID for tracking which conversation is active
+  const [currentChatRoomId, setCurrentChatRoomId] = useState<string | null>(
+    null
+  );
+
+  // ✅ NEW: Chat history state (for backward compatibility)
+  const [chatHistory, setChatHistory] = useState<{
+    messages: Array<{
+      id: string;
+      message: string;
+      role: "OWNER" | "CUSTOMER";
+      createdAt: Date;
+    }>;
+  } | null>(null);
   const onOpenChatBot = () => {
     setBotOpened((prev) => {
       const newState = !prev;
@@ -90,6 +100,38 @@ export const useChatBot = () => {
         console.log("🚀 Opening chatbot - navigating to landing page");
         setShowUserInfoForm(false);
         setShowChatHistory(false);
+
+        // ✅ NEW: Check if we have a current chat room to restore
+        if (currentChatRoomId && allChatRooms) {
+          const lastChatRoom = allChatRooms.find(
+            (room) => room.id === currentChatRoomId
+          );
+          if (lastChatRoom) {
+            console.log(
+              "🔄 Restoring last active chat room:",
+              currentChatRoomId
+            );
+
+            // Convert history messages to chat format
+            const historyChats = lastChatRoom.message.map((msg) => ({
+              role: (msg.role === "OWNER" ? "assistant" : "user") as
+                | "assistant"
+                | "user",
+              content: msg.message,
+              link: undefined,
+            }));
+
+            // Set chat messages and navigate to chat
+            setOnChats(historyChats);
+            updatePageData("chat", { messages: historyChats, isTyping: false });
+            navigateToPage("chat");
+
+            console.log("✅ Last active chat room restored");
+            return newState;
+          }
+        }
+
+        // If no last chat room, show landing page
         navigateToPage("landing", {
           hasPreviousMessages: allChatRooms && allChatRooms.length > 0,
           customerName: currentCustomer?.name || "Customer",
@@ -163,7 +205,7 @@ export const useChatBot = () => {
     setOnChats([]);
   }, []);
 
-  const [onRealTime, setOnRealTime] = useState<
+  const [onRealTime, _setOnRealTime] = useState<
     | {
         chatroom: string;
         mode: boolean;
@@ -346,21 +388,24 @@ export const useChatBot = () => {
       const chatRoomId = currentCustomer.chatRoom[0].id;
       console.log(`🎯 Setting up Socket.io for chatbot room: ${chatRoomId}`);
 
-      // Join the chat room
-      socketClient.joinRoom(
-        chatRoomId,
-        currentCustomer.id,
-        currentCustomer.name
-      );
+      // Join the chat room with a small delay to ensure proper setup
+      setTimeout(() => {
+        console.log(`🎯 Chatbot joining room: ${chatRoomId}`);
+        socketClient.joinRoom(
+          chatRoomId,
+          currentCustomer.id,
+          currentCustomer.name || "Customer"
+        );
+      }, 100);
 
       // ✅ NEW: Notify admin that customer joined this room
       socketClient.notifyAdminCustomerJoined(
         chatRoomId,
         currentCustomer.id,
-        currentCustomer.name
+        currentCustomer.name || "Customer"
       );
 
-      // Listen for new messages from admin
+      // ✅ FIXED: Listen for new messages from admin - WhatsApp-style
       socketClient.onNewMessage(
         (data: {
           id: string;
@@ -370,31 +415,39 @@ export const useChatBot = () => {
           userId: string;
           userName: string;
         }) => {
-          console.log("📨 Chatbot received message from admin:", data);
+          console.log("🔔 Received realtime message:", data);
 
-          // Only add admin messages (role === "assistant")
-          if (data.role === "assistant") {
-            setOnChats((prev) => {
-              // ✅ Prevent duplicate AI messages from socket
-              const isDuplicate = prev.some(
-                (msg) =>
-                  msg.role === "assistant" && msg.content === data.message
-              );
+          // Add message to current chat
+          setOnChats((prev) => [
+            ...prev,
+            {
+              role: data.role === "OWNER" ? "assistant" : "user",
+              content: data.message,
+            },
+          ]);
 
-              if (isDuplicate) {
-                console.log(
-                  "🔄 Socket AI message already exists, skipping duplicate"
-                );
-                return prev;
-              }
+          // Update the last message in allChatRooms if available
+          if (allChatRooms) {
+            setAllChatRooms((prev) => {
+              if (!prev) return prev;
 
-              return [
-                ...prev,
-                {
-                  role: "assistant",
-                  content: data.message,
-                },
-              ];
+              return prev.map((room) => {
+                if (room.id === chatRoomId) {
+                  return {
+                    ...room,
+                    message: [
+                      ...room.message,
+                      {
+                        id: data.id || Date.now().toString(),
+                        message: data.message,
+                        role: data.role as "OWNER" | "CUSTOMER",
+                        createdAt: new Date(data.timestamp),
+                      },
+                    ],
+                  };
+                }
+                return room;
+              });
             });
           }
         }
@@ -431,9 +484,9 @@ export const useChatBot = () => {
         }
       );
 
-      // Cleanup function
+      // Cleanup on unmount
       return () => {
-        console.log(`👋 Chatbot leaving Socket.io room: ${chatRoomId}`);
+        console.log(`👋 Leaving Socket.io room: ${chatRoomId}`);
         socketClient.leaveRoom(chatRoomId);
         socketClient.offNewMessage();
         socketClient.offUserJoined();
@@ -441,35 +494,7 @@ export const useChatBot = () => {
         socketClient.offUserTyping();
       };
     }
-  }, [currentCustomer?.chatRoom, currentCustomer?.id, currentCustomer?.name]);
-
-  // ✅ NEW: Chat history state for multiple chat rooms
-  const [allChatRooms, setAllChatRooms] = useState<Array<{
-    id: string;
-    createdAt: Date;
-    updatedAt: Date;
-    message: Array<{
-      id: string;
-      message: string;
-      role: "OWNER" | "CUSTOMER";
-      createdAt: Date;
-    }>;
-  }> | null>(null);
-
-  // ✅ NEW: Current chat room ID for tracking which conversation is active
-  const [currentChatRoomId, setCurrentChatRoomId] = useState<string | null>(
-    null
-  );
-
-  // ✅ NEW: Chat history state (for backward compatibility)
-  const [chatHistory, setChatHistory] = useState<{
-    messages: Array<{
-      id: string;
-      message: string;
-      role: "OWNER" | "CUSTOMER";
-      createdAt: Date;
-    }>;
-  } | null>(null);
+  }, [currentCustomer, setOnChats, allChatRooms, setAllChatRooms]);
 
   const onScrollToBottom = () => {
     messageWindowRef.current?.scroll({
@@ -492,81 +517,20 @@ export const useChatBot = () => {
     );
   }, [botOpened]);
 
-  useEffect(() => {
-    const handleMessage = (e: MessageEvent) => {
-      const botId = e.data;
-      console.log("📥 Received postMessage:", botId, "Type:", typeof botId);
+  // ✅ REMOVED: Complex postMessage handling - now handled in main page
 
-      // Check if it's a valid UUID (domain ID) and not a JSON string
-      const isValidDomainId =
-        typeof botId === "string" &&
-        botId.length === 36 &&
-        !botId.startsWith("{");
-
-      if (isValidDomainId && !currentBotId && !loading) {
-        console.log("✅ Processing domain ID:", botId);
-        onGetDomainChatBot(botId);
-      } else {
-        console.log(
-          "❌ Skipping message - type:",
-          typeof botId,
-          "isValidDomainId:",
-          isValidDomainId,
-          "currentBotId:",
-          currentBotId,
-          "loading:",
-          loading
-        );
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    // Cleanup function
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
-  }, [currentBotId, loading]); // ✅ FIXED: Add dependencies to prevent stale closures
-
-  // ✅ FIXED: Check for domain ID in localStorage (iframe mode or URL parameters)
+  // ✅ SIMPLE: Process domain ID from localStorage - BULLETPROOF
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedDomainId = localStorage.getItem("chatbot-domain-id");
-      const isEmbedMode = localStorage.getItem("chatbot-embed-mode") === "true";
 
-      console.log("🔍 useChatBot checking localStorage:", {
-        storedDomainId,
-        isEmbedMode,
-        currentBotId,
-        loading,
-        isIframe: window !== window.parent,
-      });
-
-      // Check if we're in iframe mode OR if we have a stored domain ID from URL parameters
-      if (
-        storedDomainId &&
-        !currentBotId &&
-        !loading &&
-        (window !== window.parent || isEmbedMode)
-      ) {
-        console.log(
-          "✅ Processing domain ID from localStorage:",
-          storedDomainId,
-          "Embed mode:",
-          isEmbedMode
-        );
+      // If we have a stored domain ID and no current bot, process it
+      if (storedDomainId && !currentBotId && !loading) {
+        console.log("🔄 Processing stored domain ID:", storedDomainId);
         onGetDomainChatBot(storedDomainId);
-      } else {
-        console.log("❌ Skipping domain ID processing:", {
-          hasStoredDomainId: !!storedDomainId,
-          hasCurrentBotId: !!currentBotId,
-          isLoading: loading,
-          isIframe: window !== window.parent,
-          isEmbedMode,
-        });
       }
     }
-  }, []); // ✅ FIXED: Remove currentBotId dependency to prevent infinite loops
+  }, [currentBotId, loading]); // Run when currentBotId or loading changes
 
   // ✅ FIXED: Restore chat rooms from localStorage on component mount
   useEffect(() => {
@@ -592,6 +556,60 @@ export const useChatBot = () => {
     }
   }, []); // ✅ FIXED: Remove allChatRooms dependency to prevent infinite loop
 
+  // ✅ NEW: Restore chat state from localStorage on component mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedChatState = localStorage.getItem("chatbot-chat-state");
+      if (storedChatState) {
+        try {
+          const parsedChatState = JSON.parse(storedChatState);
+          console.log(
+            "🔄 Restoring chat state from localStorage:",
+            parsedChatState
+          );
+
+          // Restore current chat room ID
+          if (parsedChatState.currentChatRoomId) {
+            setCurrentChatRoomId(parsedChatState.currentChatRoomId);
+          }
+
+          // Restore current customer
+          if (parsedChatState.currentCustomer) {
+            setCurrentCustomer(parsedChatState.currentCustomer);
+          }
+
+          // Restore chat messages
+          if (parsedChatState.onChats) {
+            setOnChats(parsedChatState.onChats);
+          }
+
+          // Restore page state
+          if (parsedChatState.pageState) {
+            setPageState(parsedChatState.pageState);
+          }
+        } catch (error) {
+          console.error("❌ Error parsing stored chat state:", error);
+          localStorage.removeItem("chatbot-chat-state");
+        }
+      }
+    }
+  }, []);
+
+  // ✅ NEW: Save chat state to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const chatState = {
+        currentChatRoomId,
+        currentCustomer,
+        onChats,
+        pageState,
+        timestamp: Date.now(),
+      };
+
+      localStorage.setItem("chatbot-chat-state", JSON.stringify(chatState));
+    }
+  }, [currentChatRoomId, currentCustomer, onChats, pageState]);
+
   // ✅ FIXED: Update localStorage whenever allChatRooms changes
   useEffect(() => {
     if (typeof window !== "undefined" && allChatRooms) {
@@ -611,74 +629,11 @@ export const useChatBot = () => {
   }, [allChatRooms]);
 
   const onGetDomainChatBot = async (id: string) => {
-    // ✅ FIXED: Check cache first to prevent repeated IP detection
-    const cachedResult = ipDetectionCache.get(id);
-    const now = Date.now();
-    const cacheAge = cachedResult ? now - cachedResult.timestamp : Infinity;
-
-    // Use cached result if it's less than 5 minutes old
-    if (cachedResult && cacheAge < 5 * 60 * 1000) {
-      console.log("🔄 Using cached IP detection result for domain ID:", id);
-      setCurrentBotId(id);
-      setLoading(false);
-      setIsCheckingIP(false);
+    // ✅ SIMPLE: Basic duplicate prevention
+    if (loading || currentBotId === id) {
+      console.log("🔄 Skipping duplicate request for domain ID:", id);
       return;
     }
-
-    // ✅ FIXED: Rate limiting to prevent excessive requests
-    const requestInfo = requestCounter.get(id);
-    if (requestInfo) {
-      const timeSinceFirstRequest = now - requestInfo.firstRequest;
-      if (
-        timeSinceFirstRequest < 60000 &&
-        requestInfo.count >= MAX_REQUESTS_PER_MINUTE
-      ) {
-        console.log(
-          "🔄 Rate limit exceeded for domain ID:",
-          id,
-          "Requests:",
-          requestInfo.count
-        );
-        return;
-      }
-      if (timeSinceFirstRequest >= 60000) {
-        // Reset counter after 1 minute
-        requestCounter.set(id, { count: 1, firstRequest: now });
-      } else {
-        requestCounter.set(id, {
-          count: requestInfo.count + 1,
-          firstRequest: requestInfo.firstRequest,
-        });
-      }
-    } else {
-      requestCounter.set(id, { count: 1, firstRequest: now });
-    }
-
-    // ✅ FIXED: Enhanced duplicate prevention with global lock and debouncing
-    const timeSinceLastRequest = now - lastRequestTime;
-
-    if (
-      loading ||
-      currentBotId === id ||
-      pendingRequests.has(id) ||
-      timeSinceLastRequest < 1000 ||
-      globalRequestLock.get(id)
-    ) {
-      console.log(
-        "🔄 Skipping duplicate request for domain ID:",
-        id,
-        "Time since last:",
-        timeSinceLastRequest,
-        "Global lock:",
-        globalRequestLock.get(id)
-      );
-      return;
-    }
-
-    // ✅ FIXED: Set global lock and track this request
-    globalRequestLock.set(id, true);
-    setPendingRequests((prev) => new Set(prev).add(id));
-    setLastRequestTime(now);
 
     console.log("🔄 Fetching chatbot data for domain ID:", id);
     setCurrentBotId(id);
@@ -689,11 +644,7 @@ export const useChatBot = () => {
       // ✅ FIXED: Check for existing customer by IP first (with caching)
       const existingCustomer = await onFindCustomerByIP(id);
 
-      // ✅ FIXED: Cache the IP detection result
-      ipDetectionCache.set(id, {
-        result: existingCustomer,
-        timestamp: Date.now(),
-      });
+      // ✅ REMOVED: Caching logic to simplify
 
       if (existingCustomer) {
         console.log("✅ Found existing customer by IP:", existingCustomer.name);
@@ -892,13 +843,6 @@ export const useChatBot = () => {
     } finally {
       setLoading(false);
       setIsCheckingIP(false);
-      // ✅ FIXED: Remove from pending requests and clear global lock
-      setPendingRequests((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(id);
-        return newSet;
-      });
-      globalRequestLock.delete(id);
     }
   };
 
@@ -1070,119 +1014,9 @@ export const useChatBot = () => {
   const onstartChatting = handleSubmit(async (values) => {
     try {
       reset();
-      if (values.image?.length) {
-        const uploaded = await upload.uploadFile(values.image[0]);
-        setOnChats((prev) => [
-          ...prev,
-          {
-            role: "user",
-            content: uploaded.uuid,
-          },
-        ]);
-
-        setOnAiTyping(true);
-        const response = await onAiChatBotAssistant(
-          currentBotId!,
-          onChats,
-          "user",
-          uploaded.uuid,
-          currentCustomer?.email
-        );
-        if (response) {
-          setOnAiTyping(false);
-
-          // ✅ Check if response has an error (for backward compatibility)
-          if ("error" in response && response.error) {
-            console.error("❌ AI Response error:", response.error);
-
-            // ✅ Customer-friendly error message (no technical details)
-            const aiMessage = {
-              role: "assistant" as const,
-              content:
-                "I'm sorry, I'm having trouble responding right now. Please try again in a moment.",
-            };
-
-            setOnChats((prev) => [...prev, aiMessage]);
-            setOnAiTyping(false);
-            return;
-          }
-
-          if (response.live) {
-            setOnRealTime((prev) => ({
-              ...prev,
-              chatroom: response.chatRoom,
-              mode: response.live,
-            }));
-          } else {
-            // ✅ Enhanced debugging for AI response (image)
-            console.log("🤖 AI Response received (image):", response);
-            console.log("🤖 Response type (image):", typeof response);
-            console.log("🤖 Response.response (image):", response.response);
-
-            // ✅ Handle different response structures
-            let aiMessage: { role: "assistant"; content: string } | undefined;
-
-            if (response.response && typeof response.response === "object") {
-              // Structure: { response: { role: "assistant", content: "..." } }
-              aiMessage = {
-                role: "assistant" as const,
-                content:
-                  response.response.content ||
-                  "I'm sorry, I couldn't process that.",
-              };
-            } else if ("role" in response && "content" in response) {
-              // Structure: { role: "assistant", content: "..." }
-              const responseWithContent = response as {
-                role: string;
-                content: string;
-              };
-              aiMessage = {
-                role: "assistant" as const,
-                content: responseWithContent.content,
-              };
-            } else {
-              console.error(
-                "❌ Invalid AI response structure (image):",
-                response
-              );
-
-              // ✅ Customer-friendly error message
-              aiMessage = {
-                role: "assistant" as const,
-                content:
-                  "I'm sorry, I couldn't process that. Please try again.",
-              };
-            }
-
-            if (aiMessage) {
-              setOnChats((prev) => [...prev, aiMessage]);
-            }
-
-            console.log("🤖 Adding AI response (image):", aiMessage);
-            setOnChats((prev) => {
-              console.log("🔄 Previous chats (image):", prev);
-              const newChats = [...prev, aiMessage];
-              console.log("🔄 New chats (image):", newChats);
-              return newChats;
-            });
-          }
-        } else {
-          console.error("❌ No response received from AI (image)");
-          setOnAiTyping(false);
-
-          // ✅ Customer-friendly error message
-          const aiMessage = {
-            role: "assistant" as const,
-            content:
-              "I'm sorry, I didn't receive a response. Please try again.",
-          };
-
-          setOnChats((prev) => [...prev, aiMessage]);
-        }
-      }
 
       if (values.content) {
-        // ✅ OPTIMIZED: Update UI immediately for better responsiveness
+        // Update UI immediately for better responsiveness
         const userMessage = {
           role: "user" as const,
           content: values.content || "",
@@ -1191,217 +1025,102 @@ export const useChatBot = () => {
         setOnChats((prev) => [...prev, userMessage]);
         setOnAiTyping(true);
 
-        // ✅ Store user message in database in background
-        let chatRoomId = currentCustomer?.chatRoom?.[0]?.id;
+        // Store user message in database and send via WebSocket
+        const chatRoomId = currentCustomer?.chatRoom?.[0]?.id;
 
         if (chatRoomId) {
-          console.log(
-            "💾 Storing user message for returning customer in existing chat room:",
-            chatRoomId
-          );
-          // ✅ Store in background without blocking UI
-          onStoreConversations(chatRoomId, values.content, "user")
-            .then(() => {
-              console.log(
-                "✅ User message stored successfully in existing chat room"
-              );
-
-              // ✅ Socket.io: Send real-time message to admin
-              const messageContent = values.content;
-              if (
-                currentCustomer?.id &&
-                currentCustomer?.name &&
-                messageContent &&
-                typeof messageContent === "string" &&
-                chatRoomId
-              ) {
-                console.log("📡 Sending user message via Socket.io to admin");
-                socketClient.sendMessage(
-                  chatRoomId,
-                  messageContent,
-                  currentCustomer.id,
-                  currentCustomer.name,
-                  "user"
-                );
-              }
-            })
-            .catch((error) => {
-              console.error("❌ Failed to store user message:", error);
+          // Send message via WebSocket for real-time storage and broadcasting
+          if (currentCustomer?.id && currentCustomer?.name && chatRoomId) {
+            console.log("📤 Chatbot sending user message via WebSocket:", {
+              chatRoomId,
+              message: values.content,
+              userId: currentCustomer.id,
+              userName: currentCustomer.name,
             });
+
+            // ✅ FIXED: Send via WebSocket for storage and broadcasting
+            socketClient.sendMessageWithDomain(
+              chatRoomId,
+              values.content || "",
+              currentCustomer.id,
+              currentCustomer.name,
+              "user",
+              currentBotId // domainId for AI integration
+            );
+          }
         } else {
-          // ✅ Create new chat room for returning user starting fresh OR new chat
-          console.log("🏗️ Creating new chat room for returning user");
-          onCreateCustomerWithInfo(
-            currentBotId || "", // domainId
-            {
-              name: currentCustomer?.name || "Returning User",
-              email: currentCustomer?.email || "",
-              phone: currentCustomer?.phone || undefined,
-              countryCode: currentCustomer?.countryCode || "+1",
-            }
-          )
-            .then((newChatRoom) => {
-              if (newChatRoom?.customer?.chatRoom?.[0]?.id) {
-                chatRoomId = newChatRoom.customer.chatRoom[0].id;
-                console.log("✅ New chat room created:", chatRoomId);
-
-                // Update current customer with new chat room
-                setCurrentCustomer({
-                  id: newChatRoom.customer.id,
-                  name: newChatRoom.customer.name || "Returning User",
-                  email: newChatRoom.customer.email || "",
-                  phone: newChatRoom.customer.phone || undefined,
-                  countryCode: newChatRoom.customer.countryCode || "+1",
-                  ipAddress: newChatRoom.customer.ipAddress || undefined,
-                  createdAt: newChatRoom.customer.createdAt,
-                  chatRoom: newChatRoom.customer.chatRoom,
-                });
-
-                // Store the message in the new chat room
-                if (chatRoomId) {
-                  const roomId = chatRoomId;
-                  return onStoreConversations(
-                    roomId,
-                    values.content || "",
-                    "user"
-                  );
-                }
-              } else {
-                console.error(
-                  "❌ Failed to create new chat room for returning user"
-                );
-              }
-            })
-            .then(() => {
-              console.log("✅ User message stored in new chat room");
-            })
-            .catch((error) => {
-              console.error("❌ Failed to store user message:", error);
-            });
+          console.warn("⚠️ No chatRoomId available for WebSocket message");
         }
 
+        // Check if live agent mode is enabled for this chat room
+        const isLiveAgentMode =
+          onRealTime?.chatroom === chatRoomId && onRealTime?.mode;
+
+        if (isLiveAgentMode) {
+          // Live agent mode - don't send AI response, just notify admin
+          console.log("👮‍♂️ Live agent mode enabled - skipping AI response");
+          setOnAiTyping(false);
+          return;
+        }
+
+        // Get AI response
         const response = await onAiChatBotAssistant(
           currentBotId!,
           onChats,
           "user",
-          values.content,
+          values.content || "",
           currentCustomer?.email
         );
 
         if (response) {
           setOnAiTyping(false);
 
-          // ✅ Check if response has an error (for backward compatibility)
           if ("error" in response && response.error) {
             console.error("❌ AI Response error:", response.error);
-
-            // ✅ Customer-friendly error message (no technical details)
             const aiMessage = {
               role: "assistant" as const,
               content:
                 "I'm sorry, I'm having trouble responding right now. Please try again in a moment.",
             };
-
             setOnChats((prev) => [...prev, aiMessage]);
-            setOnAiTyping(false);
             return;
           }
 
-          if (response.live) {
-            setOnRealTime((prev) => ({
-              ...prev,
-              chatroom: response.chatRoom,
-              mode: response.live,
-            }));
-          } else {
-            // ✅ Enhanced debugging for AI response
-            console.log("🤖 AI Response received:", response);
-            console.log("🤖 Response type:", typeof response);
-            console.log("🤖 Response.response:", response.response);
+          if (response.response && response.response.content) {
+            const aiMessage = {
+              role: "assistant" as const,
+              content: response.response.content,
+            };
+            setOnChats((prev) => [...prev, aiMessage]);
 
-            // ✅ Handle different response structures
-            let aiMessage: { role: "assistant"; content: string } | undefined;
-
-            if (response.response && typeof response.response === "object") {
-              // Structure: { response: { role: "assistant", content: "..." } }
-              aiMessage = {
-                role: "assistant" as const,
-                content:
-                  response.response.content ||
-                  "I'm sorry, I couldn't process that.",
-              };
-            } else if ("role" in response && "content" in response) {
-              // Structure: { role: "assistant", content: "..." }
-              const responseWithContent = response as {
-                role: string;
-                content: string;
-              };
-              aiMessage = {
-                role: "assistant" as const,
-                content: responseWithContent.content,
-              };
-            } else {
-              console.error("❌ Invalid AI response structure:", response);
-
-              // ✅ Customer-friendly error message
-              aiMessage = {
-                role: "assistant" as const,
-                content:
-                  "I'm sorry, I couldn't process that. Please try again.",
-              };
-            }
-
-            if (aiMessage) {
-              console.log("🤖 Adding AI response (text):", aiMessage);
-              // ✅ Only add to chat state if it's not already there (prevent duplicates)
-              setOnChats((prev) => {
-                // Check if the last message is already an AI response with same content
-                const lastMessage = prev[prev.length - 1];
-                const isDuplicate =
-                  lastMessage &&
-                  lastMessage.role === "assistant" &&
-                  lastMessage.content === aiMessage.content;
-
-                if (isDuplicate) {
-                  console.log(
-                    "🔄 AI message already exists, skipping duplicate"
-                  );
-                  return prev;
-                }
-
-                // Also check for any existing AI message with same content
-                const hasDuplicate = prev.some(
-                  (msg) =>
-                    msg.role === "assistant" &&
-                    msg.content === aiMessage.content
-                );
-
-                if (hasDuplicate) {
-                  console.log(
-                    "🔄 AI message already exists elsewhere, skipping duplicate"
-                  );
-                  return prev;
-                }
-
-                return [...prev, aiMessage];
+            // ✅ NEW: Send AI response via WebSocket for storage and broadcasting
+            const chatRoomId = currentCustomer?.chatRoom?.[0]?.id;
+            if (chatRoomId && currentCustomer?.id && currentCustomer?.name) {
+              console.log("📤 Sending AI response via WebSocket:", {
+                chatRoomId,
+                message: response.response.content,
+                userId: currentCustomer.id,
+                userName: currentCustomer.name,
               });
-            }
 
-            // ✅ AI response is already stored in database by the bot actions
-            // No need to send socket message for AI responses - we only want streaming
-            // Socket messages are only for admin-to-customer communication
+              // ✅ FIXED: Send via WebSocket for storage and broadcasting
+              socketClient.sendMessageWithDomain(
+                chatRoomId,
+                response.response.content,
+                currentCustomer.id,
+                currentCustomer.name,
+                "assistant",
+                currentBotId // domainId for AI integration
+              );
+            }
           }
         } else {
-          console.error("❌ No response received from AI");
           setOnAiTyping(false);
-
-          // ✅ Customer-friendly error message
           const aiMessage = {
             role: "assistant" as const,
             content:
               "I'm sorry, I didn't receive a response. Please try again.",
           };
-
           setOnChats((prev) => [...prev, aiMessage]);
         }
       }
@@ -1410,6 +1129,22 @@ export const useChatBot = () => {
       setOnAiTyping(false);
     }
   });
+
+  // ✅ NEW: Function to toggle live agent mode
+  const toggleLiveAgentMode = useCallback(
+    (chatRoomId: string, enabled: boolean) => {
+      _setOnRealTime({
+        chatroom: chatRoomId,
+        mode: enabled,
+      });
+      console.log(
+        `👮‍♂️ Live agent mode ${
+          enabled ? "enabled" : "disabled"
+        } for chat room: ${chatRoomId}`
+      );
+    },
+    []
+  );
 
   return {
     botOpened,
@@ -1444,6 +1179,8 @@ export const useChatBot = () => {
     currentChatRoomId,
     // ✅ NEW: Current bot ID for domain identification
     currentBotId,
+    // ✅ NEW: Live agent functionality
+    toggleLiveAgentMode,
   };
 };
 

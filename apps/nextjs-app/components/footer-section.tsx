@@ -1,6 +1,6 @@
 "use client";
 
-import { Twitter, Github, Linkedin } from "lucide-react";
+// import { Twitter, Github, Linkedin } from "lucide-react";
 
 export function FooterSection() {
   return (
@@ -15,7 +15,7 @@ export function FooterSection() {
         <p className="text-foreground/90 text-sm font-medium leading-[18px] text-left">
           AI sales agent that never sleeps
         </p>
-        <div className="flex justify-start items-start gap-3">
+        {/* <div className="flex justify-start items-start gap-3">
           <a
             href="#"
             aria-label="Twitter"
@@ -37,7 +37,7 @@ export function FooterSection() {
           >
             <Linkedin className="w-full h-full text-muted-foreground" />
           </a>
-        </div>
+        </div> */}
       </div>
       {/* Right Section: Product, Company, Resources */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 p-4 md:p-8 w-full md:w-auto">
@@ -94,18 +94,6 @@ export function FooterSection() {
               className="text-foreground text-sm font-normal leading-5 hover:underline"
             >
               Our team
-            </a>
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              Careers
-            </a>
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              Press
             </a>
             <a
               href="/contact"

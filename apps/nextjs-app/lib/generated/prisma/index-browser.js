@@ -219,11 +219,15 @@ exports.Prisma.ChatMessageScalarFieldEnum = {
 exports.Prisma.AiUsageScalarFieldEnum = {
   id: 'id',
   chatMessageId: 'chatMessageId',
-  modelUsed: 'modelUsed',
+  model: 'model',
   tokensUsed: 'tokensUsed',
   creditsUsed: 'creditsUsed',
+  estimatedCost: 'estimatedCost',
+  messageType: 'messageType',
+  success: 'success',
   domainId: 'domainId',
   userId: 'userId',
+  usedAt: 'usedAt',
   createdAt: 'createdAt'
 };
 

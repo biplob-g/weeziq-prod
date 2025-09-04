@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
 import { onCreateSubscription } from "@/actions/payment";
+import { useCurrency, convertPrice } from "@/lib/currencyConverter";
 
 interface RazorpayResponse {
   razorpay_subscription_id: string;
@@ -52,10 +53,12 @@ declare global {
 
 export const PricingSection = () => {
   const [loading, setLoading] = useState<string | null>(null);
+  const [convertedPlans, setConvertedPlans] = useState<any[]>([]);
   const router = useRouter();
   const { user } = useUser();
+  const { currency, loading: currencyLoading } = useCurrency();
 
-  const plans = [
+  const basePlans = [
     {
       id: "STARTER",
       ...getPlanLimits("STARTER"),
@@ -72,6 +75,27 @@ export const PricingSection = () => {
       popular: false,
     },
   ];
+
+  // Convert prices when currency changes
+  useEffect(() => {
+    if (!currencyLoading) {
+      const converted = basePlans.map((plan) => {
+        if (plan.id === "STARTER") {
+          return {
+            ...plan,
+            displayPrice: "Free Trial - 14 Days",
+          };
+        }
+
+        const convertedPrice = convertPrice(plan.usdPrice, currency);
+        return {
+          ...plan,
+          displayPrice: convertedPrice.displayPrice,
+        };
+      });
+      setConvertedPlans(converted);
+    }
+  }, [currency, currencyLoading]);
 
   const handlePlanSelect = async (planId: string) => {
     console.log("Plan selected:", planId);
@@ -188,89 +212,105 @@ export const PricingSection = () => {
       </div>
 
       <div className="grid md:grid-cols-3 gap-8">
-        {plans.map((plan) => (
-          <Card
-            key={plan.id}
-            className={`relative transition-all duration-300 hover:shadow-lg ${
-              plan.popular ? "ring-2 ring-blue-500 scale-105" : ""
-            }`}
-          >
-            {plan.popular && (
-              <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-500">
-                Most Popular
-              </Badge>
-            )}
-
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-              <CardDescription className="text-3xl font-bold text-gray-900">
-                {plan.price}
-                {plan.id !== "STARTER" && (
-                  <span className="text-lg font-normal text-gray-600">
-                    /month
-                  </span>
-                )}
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              {/* Credits Overview */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">AI Conversations</span>
-                  <span className="font-bold">{plan.aiCredits}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Email Campaigns</span>
-                  <span className="font-bold">{plan.emailCredits}</span>
-                </div>
-              </div>
-
-              {/* Features List */}
-              <div className="space-y-3">
-                <h4 className="font-semibold text-sm">What&apos;s included:</h4>
-                <ul className="space-y-2">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-2 text-sm">
-                      <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* CTA Button */}
-              <Button
-                className={`w-full ${
-                  plan.popular
-                    ? "bg-blue-600 hover:bg-blue-700"
-                    : plan.id === "STARTER"
-                    ? "bg-gray-900 hover:bg-gray-800"
-                    : "bg-purple-600 hover:bg-purple-700"
-                }`}
-                onClick={() => handlePlanSelect(plan.id)}
-                disabled={loading === plan.id}
-              >
-                {loading === plan.id ? (
-                  <>
-                    <Spinner size="sm" className="mr-2" />
-                    Processing...
-                  </>
-                ) : plan.id === "STARTER" ? (
-                  "Start Free Trial"
-                ) : (
-                  `Get ${plan.name}`
-                )}
-              </Button>
-
-              {plan.id === "STARTER" && (
-                <p className="text-xs text-gray-500 text-center">
-                  No credit card required
-                </p>
+        {currencyLoading ? (
+          <div className="col-span-3 flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-2 text-gray-600">Loading pricing...</span>
+          </div>
+        ) : (
+          convertedPlans.map((plan) => (
+            <Card
+              key={plan.id}
+              className={`relative transition-all duration-300 hover:shadow-lg ${
+                plan.popular ? "ring-2 ring-blue-500 scale-105" : ""
+              }`}
+            >
+              {plan.popular && (
+                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-500">
+                  Most Popular
+                </Badge>
               )}
-            </CardContent>
-          </Card>
-        ))}
+
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold">
+                  {plan.name}
+                </CardTitle>
+                <CardDescription className="text-3xl font-bold text-gray-900">
+                  {plan.displayPrice}
+                  {plan.id !== "STARTER" && (
+                    <span className="text-lg font-normal text-gray-600">
+                      /month
+                    </span>
+                  )}
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-6">
+                {/* Credits Overview */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">
+                      AI Conversations
+                    </span>
+                    <span className="font-bold">{plan.aiCredits}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Email Campaigns</span>
+                    <span className="font-bold">{plan.emailCredits}</span>
+                  </div>
+                </div>
+
+                {/* Features List */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-sm">
+                    What&apos;s included:
+                  </h4>
+                  <ul className="space-y-2">
+                    {plan.features.map((feature: string, index: number) => (
+                      <li
+                        key={index}
+                        className="flex items-start gap-2 text-sm"
+                      >
+                        <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* CTA Button */}
+                <Button
+                  className={`w-full ${
+                    plan.popular
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : plan.id === "STARTER"
+                      ? "bg-gray-900 hover:bg-gray-800"
+                      : "bg-purple-600 hover:bg-purple-700"
+                  }`}
+                  onClick={() => handlePlanSelect(plan.id)}
+                  disabled={loading === plan.id}
+                >
+                  {loading === plan.id ? (
+                    <>
+                      <Spinner size="sm" className="mr-2" />
+                      Processing...
+                    </>
+                  ) : plan.id === "STARTER" ? (
+                    "Start Free Trial"
+                  ) : (
+                    `Get ${plan.name}`
+                  )}
+                </Button>
+
+                {plan.id === "STARTER" && (
+                  <p className="text-xs text-gray-500 text-center">
+                    No credit card required
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* FAQ or additional info */}

@@ -303,7 +303,7 @@ export const onConsumeAiCredit = async (
       await tx.aiUsage.create({
         data: {
           chatMessageId,
-          modelUsed: "gemini-pro",
+          model: "gemini-pro",
           tokensUsed,
           creditsUsed: creditsToConsume,
           domainId,
@@ -338,7 +338,7 @@ export const onRecordFlashUsage = async (
     await client.aiUsage.create({
       data: {
         chatMessageId,
-        modelUsed: "gemini-flash-lite",
+        model: "gemini-flash-lite",
         tokensUsed,
         creditsUsed: 0, // No credits used for Flash model
         domainId,
@@ -838,7 +838,7 @@ export const onGetAiUsageStats = async (userId: string) => {
 
     // Get usage by model
     const usageByModel = await client.aiUsage.groupBy({
-      by: ["modelUsed"],
+      by: ["model"],
       where: { userId },
       _sum: {
         tokensUsed: true,
@@ -883,7 +883,9 @@ export const onGetAiUsageStats = async (userId: string) => {
     });
 
     // Get domain names for the usage by domain
-    const domainIds = usageByDomain.map((usage) => usage.domainId);
+    const domainIds = usageByDomain
+      .map((usage) => usage.domainId)
+      .filter((id): id is string => id !== null);
     const domains = await client.domain.findMany({
       where: { id: { in: domainIds } },
       select: { id: true, name: true },
@@ -914,7 +916,7 @@ export const onGetAiUsageStats = async (userId: string) => {
           messageCount: recentUsage._count.id,
         },
         byModel: usageByModel.map((model) => ({
-          model: model.modelUsed,
+          model: model.model,
           tokensUsed: model._sum.tokensUsed || 0,
           creditsUsed: model._sum.creditsUsed || 0,
           messageCount: model._count.id,
