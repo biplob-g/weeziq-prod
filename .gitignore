@@ -77,3 +77,12 @@ package-lock.json
 **/.wrangler/
 DEPLOYMENT.md
 ENVIRONMENT_SETUP.md
+.cursorrules
+ENV_QUICK_REFERENCE.md
+middleware.txt
+node_modules
+apps/nextjs-app/PRODUCTION_CONFIG.md
+.gitignore
+SETUP_GUIDE.md
+apps/nextjs-app/CONTACT_FORM_SETUP.md
+apps/nextjs-app/env.example

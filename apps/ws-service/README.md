@@ -1,319 +1,232 @@
 # WeeziQ WebSocket Service
 
-A Cloudflare Worker-based WebSocket service for real-time chat, AI responses, and visitor tracking.
+A simple Cloudflare Workers service that acts as a proxy and real-time layer for the WeeziQ chatbot platform.
 
-## Features
+## 🏗️ Architecture
 
-- **Real-time WebSocket communication** for chat rooms and messaging
-- **AI integration** with OpenAI and Google Generative AI for chat responses
-- **Visitor tracking** with domain-based analytics
-- **Durable Objects** for persistent state management
-- **KV storage** for data persistence
-- **R2 bucket** for file storage
-- **CORS support** for cross-origin requests
-
-## Architecture
-
-### Durable Objects
-
-This service uses Cloudflare Durable Objects for managing persistent state:
-
-- **ChatRoom**: Manages WebSocket connections and chat room state
-- **VisitorTracker**: Tracks visitor activity and domain statistics
-
-### Localhost URLs in Durable Object Communication
-
-**Important**: The `localhost` URLs (e.g., `http://localhost/visitors/add`) used in the code are **NOT** external network calls. These are internal Cloudflare Workers patterns for Durable Object communication.
-
-When you call:
-
-```typescript
-const visitorTracker = env.VISITOR_TRACKER.get(
-  env.VISITOR_TRACKER.idFromName(domainId)
-);
-const response = await visitorTracker.fetch(
-  new Request("http://localhost/visitors/add", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ domainId, visitorId, visitorData }),
-  })
-);
+```
+Client → WebSocket → Cloudflare Worker → Neon Database (via Prisma)
+                ↓
+            AI Response (OpenAI/Google AI)
 ```
 
-The `localhost` part is a convention that tells the Cloudflare Workers runtime this is an internal request to the Durable Object itself. The path (`/visitors/add`) is then handled by the Durable Object's `fetch` method. This is safe and will work correctly in production deployment.
+## 🚀 Features
 
-## Quick Start
+- **Real-time WebSocket connections** via Durable Objects
+- **Direct database access** to Neon via Prisma
+- **AI responses** from OpenAI GPT and Google Gemini
+- **Message persistence** in PostgreSQL database
+- **Chat room management** with customer tracking
 
-### Prerequisites
+## 🔧 Setup
 
-- Node.js 18+ and npm
-- Cloudflare account
-- Wrangler CLI (`npm install -g wrangler`)
-
-### Installation
-
-1. **Install dependencies**:
-
-   ```bash
-   npm install
-   ```
-
-2. **Login to Cloudflare**:
-
-   ```bash
-   wrangler login
-   ```
-
-3. **Set up environment variables**:
-
-   ```bash
-   # Set your API keys as secrets
-   wrangler secret put OPENAI_API_KEY
-   wrangler secret put GOOGLE_AI_API_KEY
-   wrangler secret put ALLOWED_ORIGINS
-   ```
-
-4. **Create KV namespace and R2 bucket**:
-
-   ```bash
-   # Create KV namespace
-   wrangler kv:namespace create "CHAT_STORAGE"
-   wrangler kv:namespace create "CHAT_STORAGE" --preview
-
-   # Create R2 bucket
-   wrangler r2 bucket create "weeziq-files"
-   ```
-
-5. **Update wrangler.toml** with your KV namespace IDs and R2 bucket name.
-
-### Development
-
-**Local development with Socket.io**:
+### 1. Install Dependencies
 
 ```bash
-npm run dev
+npm install
 ```
 
-**Local development with Wrangler**:
+### 2. Generate Prisma Client
 
 ```bash
-npm run dev:worker
+npm run db:generate
 ```
 
-### Deployment
+### 3. Set Environment Variables
+
+```bash
+# Copy environment template
+cp env.example .dev.vars
+
+# Edit .dev.vars with your values
+DATABASE_URL="postgresql://username:password@host:port/database?sslmode=require"
+OPENAI_API_KEY="sk-..."
+GOOGLE_AI_API_KEY="..."
+```
+
+### 4. Set Cloudflare Secrets
+
+```bash
+wrangler secret put DATABASE_URL
+wrangler secret put OPENAI_API_KEY
+wrangler secret put GOOGLE_AI_API_KEY
+```
+
+### 5. Deploy
 
 ```bash
 npm run deploy
 ```
 
-## API Reference
+## 📡 API Endpoints
 
-### WebSocket Endpoints
-
-#### Connect to WebSocket
+### WebSocket Connection
 
 ```
-GET /ws
+GET /ws?roomId=<roomId>
 ```
 
-#### Message Types
+### AI Chat (Non-streaming)
 
-**Join Room**:
+```
+POST /ai/chat
+{
+  "message": "Hello",
+  "context": "You are a helpful assistant",
+  "model": "openai"
+}
+```
+
+### AI Chat (Streaming)
+
+```
+POST /ai/stream
+{
+  "message": "Hello",
+  "context": "You are a helpful assistant",
+  "model": "openai"
+}
+```
+
+### Save Message
+
+```
+POST /api/messages
+{
+  "message": "Hello",
+  "role": "user",
+  "chatRoomId": "room-id"
+}
+```
+
+### Get Chat History
+
+```
+GET /api/messages?chatRoomId=<roomId>
+```
+
+## 💬 WebSocket Messages
+
+### Join Room
 
 ```json
 {
   "type": "join-room",
-  "roomId": "room-123",
-  "userId": "user-456",
-  "userName": "John Doe"
+  "userId": "user-123",
+  "userName": "John Doe",
+  "role": "customer",
+  "domainId": "domain-123",
+  "customerData": {
+    "name": "John Doe",
+    "email": "john@example.com"
+  }
 }
 ```
 
-**Send Message**:
+### Send Message
 
 ```json
 {
   "type": "send-message",
+  "message": "Hello, how can you help me?"
+}
+```
+
+### Ping
+
+```json
+{
+  "type": "ping"
+}
+```
+
+## 📨 WebSocket Responses
+
+### Room Joined
+
+```json
+{
+  "type": "room-joined",
   "roomId": "room-123",
-  "message": "Hello world!",
-  "userId": "user-456",
-  "userName": "John Doe",
-  "role": "user"
+  "timestamp": "2024-01-01T00:00:00.000Z"
 }
 ```
 
-**AI Chat**:
+### Message Received
 
 ```json
 {
-  "type": "ai-chat",
-  "message": "What is AI?",
-  "model": "gpt-3.5-turbo",
-  "domainId": "weeziq.com",
-  "userId": "user-456",
-  "conversationId": "conv-789"
+  "type": "message-received",
+  "id": "msg-123",
+  "message": "Hello! How can I help you today?",
+  "userId": "ai-assistant",
+  "userName": "AI Assistant",
+  "role": "assistant",
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "chatRoomId": "room-123"
 }
 ```
 
-**AI Stream**:
+### Message History
 
 ```json
 {
-  "type": "ai-stream",
-  "message": "Explain quantum computing",
-  "model": "gpt-4",
-  "domainId": "weeziq.com",
-  "userId": "user-456",
-  "conversationId": "conv-789"
+  "type": "message-history",
+  "messages": [...]
 }
 ```
 
-### HTTP Endpoints
+### Pong
 
-#### Health Check
-
-```
-GET /
-```
-
-#### AI Chat (Non-streaming)
-
-```
-POST /ai/chat
-Content-Type: application/json
-
+```json
 {
-  "message": "Hello AI!",
-  "model": "gpt-3.5-turbo",
-  "domainId": "weeziq.com",
-  "userId": "user-123",
-  "conversationId": "conv-456"
+  "type": "pong",
+  "timestamp": "2024-01-01T00:00:00.000Z"
 }
 ```
 
-#### AI Stream
+## 🔄 Flow
 
-```
-POST /ai/stream
-Content-Type: application/json
+1. **Client connects** to WebSocket with room ID
+2. **User sends message** via WebSocket
+3. **Worker saves message** to Neon database
+4. **Worker generates AI response** using OpenAI/Google AI
+5. **Worker saves AI response** to database
+6. **Worker broadcasts messages** to all connected clients
 
-{
-  "message": "Tell me a story",
-  "model": "gpt-4",
-  "domainId": "weeziq.com",
-  "userId": "user-123",
-  "conversationId": "conv-456"
-}
-```
+## 🛠️ Development
 
-#### Visitor Management
+```bash
+# Start development server
+npm run dev
 
-```
-POST /visitors/add
-POST /visitors/remove
-GET /stats/domain/:domainId
-```
+# Build
+npm run build
 
-## Next.js Integration
-
-### Environment Variables
-
-Add to your Next.js app's `.env.local`:
-
-```env
-NEXT_PUBLIC_WS_URL=https://your-worker.your-subdomain.workers.dev
-NEXT_PUBLIC_AI_API_URL=https://your-worker.your-subdomain.workers.dev
+# Deploy
+npm run deploy
 ```
 
-### Socket Client
+## 📊 Database Schema
 
-Use the provided `cloudflareSocketClient.ts` for production or `socketClient.ts` for local development.
+The service uses the same Prisma schema as the Next.js app for:
 
-## Security
+- Customers
+- Chat Rooms
+- Chat Messages
+- Domains
+- AI Usage tracking
 
-- **CORS**: Configured for specific origins
-- **API Keys**: Stored as Cloudflare secrets
-- **Input Validation**: All inputs are validated
-- **Rate Limiting**: Implemented for AI endpoints
+## 🔒 Security
 
-## Monitoring
+- CORS enabled for cross-origin requests
+- Environment variables for sensitive data
+- WebSocket connection validation
+- Database connection pooling
 
-- **Health checks**: Available at `/`
-- **Error logging**: All errors are logged to Cloudflare Workers logs
-- **Metrics**: Available in Cloudflare dashboard
+## 🚨 Error Handling
 
-## Configuration
-
-### wrangler.toml
-
-```toml
-name = "weeziq-ws-service"
-compatibility_date = "2024-01-15"
-compatibility_flags = ["nodejs_compat"]
-
-main = "src/index.ts"
-
-[vars]
-NODE_ENV = "production"
-
-[[durable_objects.bindings]]
-name = "CHAT_ROOM"
-class_name = "ChatRoom"
-
-[[durable_objects.bindings]]
-name = "VISITOR_TRACKER"
-class_name = "VisitorTracker"
-
-[[kv_namespaces]]
-binding = "CHAT_STORAGE"
-id = "your-kv-namespace-id"
-preview_id = "your-preview-kv-namespace-id"
-
-[[r2_buckets]]
-binding = "FILE_STORAGE"
-bucket_name = "weeziq-files"
-
-[[migrations]]
-tag = "v1"
-new_classes = ["ChatRoom", "VisitorTracker"]
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **TypeScript Errors**: Run `npm run build` to check for type errors
-2. **Durable Object Errors**: Ensure migrations are applied with `wrangler deploy`
-3. **CORS Errors**: Check origin configuration in CORS middleware
-4. **API Key Errors**: Verify secrets are set with `wrangler secret list`
-
-### Debug Mode
-
-Enable debug logging by setting `NODE_ENV=development` in your environment variables.
-
-## Performance
-
-- **WebSocket connections**: Handled efficiently with Durable Objects
-- **AI responses**: Streaming for better user experience
-- **Data persistence**: KV storage for fast access
-- **File storage**: R2 for scalable file management
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests: `npm test`
-5. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details.
-
-## Support
-
-For support and questions:
-
-- Create an issue in the repository
-- Check the Cloudflare Workers documentation
-- Review the troubleshooting section above
+- Graceful WebSocket disconnection
+- Database operation retries
+- AI service fallbacks
+- Comprehensive error logging

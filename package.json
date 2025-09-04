@@ -17,10 +17,18 @@
     "install:all": "npm install && cd apps/nextjs-app && npm install && cd ../ws-service && npm install",
     "clean": "npm run clean:next && npm run clean:ws",
     "clean:next": "cd apps/nextjs-app && rm -rf .next node_modules",
-    "clean:ws": "cd apps/ws-service && rm -rf .wrangler node_modules"
+    "clean:ws": "cd apps/ws-service && rm -rf .wrangler node_modules",
+    "start:ws": "cd apps/ws-service && npm run dev",
+    "start:next": "cd apps/nextjs-app && npm run dev",
+    "setup:env": "node setup-env.js",
+    "setup:env:prod": "node setup-env-production.js",
+    "status": "node check-status.js"
   },
   "devDependencies": {
     "concurrently": "^9.2.0",
     "typescript": "^5"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
   }
 }

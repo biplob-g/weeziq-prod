@@ -1,277 +1,221 @@
-import { Hono } from "hono";
-import { cors } from "hono/cors";
-import { AIHandler } from "./ai-handler.js";
+import { ChatRoomDurableObject } from "./chatroom";
+import { DatabaseService } from "./database";
+import { AIService } from "./ai";
 
-// Define environment types for Cloudflare Workers
-interface Env {
-  OPENAI_API_KEY?: string;
-  GOOGLE_AI_API_KEY?: string;
-  ALLOWED_ORIGINS?: string;
+export interface Env {
+  CHATROOMS: DurableObjectNamespace;
+  OPENAI_API_KEY: string;
+  GOOGLE_AI_API_KEY: string;
+  DATABASE_URL: string;
+  NEXTJS_API_URL: string;
+  ALLOWED_ORIGINS: string;
 }
 
-const app = new Hono<{ Bindings: Env }>();
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    };
 
-// Get allowed origins from environment
-const getAllowedOrigins = (env: Env) => {
-  if (env.ALLOWED_ORIGINS) {
-    return env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim());
-  }
+    // Handle CORS preflight
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
 
-  // Fallback to common origins including localhost for development
-  return [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "https://weeziq.com",
-    "https://app.weeziq.com",
-    "https://*.vercel.app",
-  ];
+    // WebSocket connection for real-time chat
+    if (url.pathname === "/ws") {
+      const roomId = url.searchParams.get("roomId") || "default";
+      const id = env.CHATROOMS.idFromName(roomId);
+      const obj = env.CHATROOMS.get(id);
+      return obj.fetch(request);
+    }
+
+    // AI chat endpoint (non-streaming)
+    if (url.pathname === "/ai/chat" && request.method === "POST") {
+      try {
+        const body = (await request.json()) as {
+          message: string;
+          context?: string;
+          model?: "openai" | "google";
+        };
+
+        const aiService = new AIService(env);
+        const response = await aiService.getResponse(
+          body.message,
+          body.context,
+          body.model
+        );
+
+        return new Response(JSON.stringify({ response }), {
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        });
+      } catch (error) {
+        console.error("AI chat error:", error);
+        return new Response(JSON.stringify({ error: "AI service error" }), {
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        });
+      }
+    }
+
+    // AI streaming endpoint
+    if (url.pathname === "/ai/stream" && request.method === "POST") {
+      try {
+        const body = (await request.json()) as {
+          message: string;
+          context?: string;
+          model?: "openai" | "google";
+        };
+
+        const aiService = new AIService(env);
+
+        const stream = new ReadableStream({
+          async start(controller) {
+            try {
+              const response = await aiService.getResponse(
+                body.message,
+                body.context,
+                body.model
+              );
+              controller.enqueue(new TextEncoder().encode(response));
+              controller.close();
+            } catch (error) {
+              console.error("Streaming error:", error);
+              const errorMessage =
+                "Sorry, I encountered an error. Please try again.";
+              controller.enqueue(new TextEncoder().encode(errorMessage));
+              controller.close();
+            }
+          },
+        });
+
+        return new Response(stream, {
+          headers: {
+            "Content-Type": "text/plain; charset=utf-8",
+            "Cache-Control": "no-cache",
+            Connection: "keep-alive",
+            ...corsHeaders,
+          },
+        });
+      } catch (error) {
+        console.error("AI streaming error:", error);
+        return new Response(
+          JSON.stringify({ error: "AI streaming service error" }),
+          {
+            status: 500,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders,
+            },
+          }
+        );
+      }
+    }
+
+    // Database operations via API
+    if (url.pathname === "/api/messages" && request.method === "POST") {
+      try {
+        const body = (await request.json()) as {
+          message: string;
+          role: "user" | "assistant";
+          chatRoomId: string;
+        };
+
+        const databaseService = new DatabaseService(env.NEXTJS_API_URL);
+        const savedMessage = await databaseService.saveMessage(body);
+
+        return new Response(JSON.stringify(savedMessage), {
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        });
+      } catch (error) {
+        console.error("Database operation error:", error);
+        return new Response(
+          JSON.stringify({ error: "Database operation failed" }),
+          {
+            status: 500,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders,
+            },
+          }
+        );
+      }
+    }
+
+    // Get chat history
+    if (url.pathname === "/api/messages" && request.method === "GET") {
+      try {
+        const chatRoomId = url.searchParams.get("chatRoomId");
+        if (!chatRoomId) {
+          return new Response(
+            JSON.stringify({ error: "Chat room ID required" }),
+            {
+              status: 400,
+              headers: {
+                "Content-Type": "application/json",
+                ...corsHeaders,
+              },
+            }
+          );
+        }
+
+        const databaseService = new DatabaseService(env.NEXTJS_API_URL);
+        const history = await databaseService.getChatHistory(chatRoomId);
+
+        return new Response(JSON.stringify(history), {
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        });
+      } catch (error) {
+        console.error("Get chat history error:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to get chat history" }),
+          {
+            status: 500,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders,
+            },
+          }
+        );
+      }
+    }
+
+    // Health check
+    return new Response(
+      JSON.stringify({
+        status: "WebSocket Service Running",
+        timestamp: new Date().toISOString(),
+        endpoints: {
+          websocket: "/ws?roomId=<roomId>",
+          aiChat: "/ai/chat",
+          aiStream: "/ai/stream",
+          messages: "/api/messages",
+        },
+      }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      }
+    );
+  },
 };
 
-// CORS middleware with proper origins for deployment
-app.use(
-  "*",
-  cors({
-    origin: (origin, c) => {
-      const allowedOrigins = getAllowedOrigins(c.env);
-      return allowedOrigins.includes(origin) ? origin : undefined;
-    },
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
-);
-
-// Health check endpoint
-app.get("/", (c) => {
-  return c.json({
-    status: "ok",
-    message: "WeeziQ WebSocket service is running",
-    timestamp: new Date().toISOString(),
-    version: "1.0.0",
-  });
-});
-
-// WebSocket upgrade endpoint
-app.get("/ws", async (c) => {
-  const upgradeHeader = c.req.header("Upgrade");
-
-  if (upgradeHeader !== "websocket") {
-    return c.json({ error: "Expected websocket" }, 400);
-  }
-
-  const webSocketPair = new WebSocketPair();
-  const [client, server] = Object.values(webSocketPair);
-
-  server.accept();
-
-  // Handle WebSocket connection
-  server.addEventListener("message", async (event) => {
-    try {
-      const data = JSON.parse(event.data as string);
-
-      // Handle different message types
-      switch (data.type) {
-        case "send-message":
-          await handleSendMessage(data, server, c.env);
-          break;
-        case "typing-start":
-          handleTypingStart(data, server);
-          break;
-        case "typing-stop":
-          handleTypingStop(data, server);
-          break;
-        case "ping":
-          handlePing(server);
-          break;
-        default:
-          server.send(
-            JSON.stringify({
-              type: "error",
-              message: "Unknown message type",
-              timestamp: new Date().toISOString(),
-            })
-          );
-      }
-    } catch (error) {
-      console.error("WebSocket message error:", error);
-      server.send(
-        JSON.stringify({
-          type: "error",
-          message: "Invalid message format",
-          timestamp: new Date().toISOString(),
-        })
-      );
-    }
-  });
-
-  server.addEventListener("close", () => {
-    console.log("WebSocket connection closed");
-  });
-
-  server.addEventListener("error", (error) => {
-    console.error("WebSocket error:", error);
-  });
-
-  return new Response(null, {
-    status: 101,
-    webSocket: client,
-  });
-});
-
-// AI chat endpoint
-app.post("/ai/chat", async (c) => {
-  try {
-    const body = await c.req.json();
-    const { message, conversationId, domainId, userId } = body;
-
-    if (!message) {
-      return c.json({ error: "Message is required" }, 400);
-    }
-
-    const aiHandler = new AIHandler();
-    const response = await aiHandler.getResponse(
-      message,
-      "gpt-3.5-turbo",
-      domainId,
-      userId,
-      conversationId
-    );
-
-    return c.json(response);
-  } catch (error) {
-    console.error("AI chat error:", error);
-    return c.json({ error: "Internal server error" }, 500);
-  }
-});
-
-// AI streaming endpoint
-app.post("/ai/stream", async (c) => {
-  try {
-    const body = await c.req.json();
-    const { message, conversationId, domainId, userId } = body;
-
-    if (!message) {
-      return c.json({ error: "Message is required" }, 400);
-    }
-
-    const aiHandler = new AIHandler();
-
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          await aiHandler.streamResponse(
-            message,
-            "gpt-3.5-turbo",
-            domainId,
-            controller,
-            userId,
-            conversationId
-          );
-          controller.close();
-        } catch (error) {
-          console.error("Streaming error:", error);
-          controller.error(error);
-        }
-      },
-    });
-
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    });
-  } catch (error) {
-    console.error("AI stream error:", error);
-    return c.json({ error: "Internal server error" }, 500);
-  }
-});
-
-// WebSocket message handlers
-async function handleSendMessage(data: any, ws: WebSocket, env: Env) {
-  const { message, userId, userName, role, conversationId, domainId } = data;
-
-  try {
-    // Send user message back to confirm receipt
-    ws.send(
-      JSON.stringify({
-        type: "message-received",
-        message,
-        userId,
-        userName,
-        role: "user",
-        timestamp: new Date().toISOString(),
-      })
-    );
-
-    // Get AI response
-    const aiHandler = new AIHandler();
-    const aiResponse = await aiHandler.getResponse(
-      message,
-      "gpt-3.5-turbo",
-      domainId,
-      userId,
-      conversationId
-    );
-
-    // Send AI response
-    ws.send(
-      JSON.stringify({
-        type: "ai-response",
-        message: aiResponse.message,
-        role: "assistant",
-        timestamp: new Date().toISOString(),
-      })
-    );
-  } catch (error) {
-    console.error("Error handling message:", error);
-    ws.send(
-      JSON.stringify({
-        type: "error",
-        message: "Failed to process message",
-        timestamp: new Date().toISOString(),
-      })
-    );
-  }
-}
-
-function handleTypingStart(data: any, ws: WebSocket) {
-  const { userId, userName } = data;
-
-  ws.send(
-    JSON.stringify({
-      type: "typing-start",
-      userId,
-      userName,
-      timestamp: new Date().toISOString(),
-    })
-  );
-}
-
-function handleTypingStop(data: any, ws: WebSocket) {
-  const { userId, userName } = data;
-
-  ws.send(
-    JSON.stringify({
-      type: "typing-stop",
-      userId,
-      userName,
-      timestamp: new Date().toISOString(),
-    })
-  );
-}
-
-function handlePing(ws: WebSocket) {
-  ws.send(
-    JSON.stringify({
-      type: "pong",
-      timestamp: new Date().toISOString(),
-    })
-  );
-}
-
-export default app;
-
-// Export placeholder classes for migration
-export { ChatRoom, VisitorTracker } from "./placeholder-classes.js";
+export { ChatRoomDurableObject };

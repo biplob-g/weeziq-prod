@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullname     String
+  clerkId      String    @unique
+  role         String    @default("admin")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  subscription Billings?
+  domains      Domain[]
+  aiUsage      AiUsage[]
+  googleIntegration GoogleIntegration?
+  fileUploads  FileUpload[]
+}
+
+model Domain {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  icon            String
+  userId          String?           @db.Uuid
+  chatBot         ChatBot?
+  customer        Customer[]
+  User            User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  filterQuestions FilterQuestions[]
+  helpdesk        HelpDesk[]
+  aiUsage         AiUsage[]
+  satisfactionRatings SatisfactionRating[]
+  fileUploads     FileUpload[]
+}
+
+model ChatBot {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  welcomeMessage String?
+  icon           String?
+  domainID       String?  @unique @db.Uuid
+  background     String?
+  helpdesk       Boolean?
+  textColor      String?
+  taskSummary    String?
+  Domain         Domain?  @relation(fields: [domainID], references: [id], onDelete: Cascade)
+}
+
+model Billings {
+  id                        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  plan                      Plans     @default(STARTER)
+  aiCreditsUsed             Int       @default(0)
+  aiCreditsLimit            Int       @default(50)
+  emailCreditsUsed          Int       @default(0)
+  emailCreditsLimit         Int       @default(50)
+  subscriptionStatus        String    @default("trial")
+  trialStartDate            DateTime? @default(now())
+  trialEndDate              DateTime?
+  currentPeriodStart        DateTime? @default(now())
+  currentPeriodEnd          DateTime?
+  credits                   Int       @default(10)
+  userId                    String?   @unique @db.Uuid
+  User                      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+}
+
+model HelpDesk {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  question String
+  answered String
+  domainId String @db.Uuid
+  Domain   Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+}
+
+model FilterQuestions {
+  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  question String
+  answered String
+  domainId String? @db.Uuid
+  Domain   Domain? @relation(fields: [domainId], references: [id], onDelete: Cascade)
+}
+
+model CustomerResponses {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  question   String
+  answered   String
+  customerId String   @db.Uuid
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model Customer {
+  id          String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String?
+  email       String?
+  phone       String?
+  countryCode String?             @default("+1")
+  ipAddress   String?
+  domainId    String?             @db.Uuid
+  chatRoom    ChatRoom[]
+  Domain      Domain?             @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  questions   CustomerResponses[]
+  satisfactionRatings SatisfactionRating[]
+  createdAt   DateTime            @default(now())
+}
+
+model ChatRoom {
+  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  mailed     Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  customerId String?       @db.Uuid
+  live       Boolean       @default(false)
+  message    ChatMessage[]
+  Customer   Customer?     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model ChatMessage {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  message    String
+  role       Role?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  chatRoomId String   @db.Uuid
+  seen       Boolean  @default(false)
+  ChatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  aiUsage    AiUsage?
+}
+
+model AiUsage {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  chatMessageId String?     @unique @db.Uuid
+  model         String
+  tokensUsed    Int
+  creditsUsed   Int         @default(0)
+  estimatedCost Float       @default(0)
+  messageType   String      @default("chat")
+  success       Boolean     @default(true)
+  domainId      String?     @db.Uuid
+  userId        String      @db.Uuid
+  usedAt        DateTime    @default(now())
+  createdAt     DateTime    @default(now())
+  ChatMessage   ChatMessage? @relation(fields: [chatMessageId], references: [id], onDelete: Cascade)
+  Domain        Domain?     @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  User          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SatisfactionRating {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rating      String
+  feedback    String?
+  domainId    String   @db.Uuid
+  visitorId   String
+  customerId  String?  @db.Uuid
+  createdAt   DateTime @default(now())
+  Domain      Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  Customer    Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+enum Plans {
+  STARTER
+  GROWTH
+  PRO
+  STANDARD
+  ULTIMATE
+}
+
+enum Role {
+  OWNER
+  CUSTOMER
+}
+
+model GoogleIntegration {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @unique @db.Uuid
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  email        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exportHistory ExportHistory[]
+}
+
+model ExportHistory {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @db.Uuid
+  spreadsheetId String
+  sheetName     String
+  recordCount   Int
+  status        String
+  exportedAt    DateTime @default(now())
+  GoogleIntegration GoogleIntegration @relation(fields: [userId], references: [userId], onDelete: Cascade)
+}
+
+model FileUpload {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fileName    String
+  fileSize    Int
+  fileType    String
+  filePath    String
+  fileContent String?
+  uploadStatus String  @default("PENDING")
+  userId      String   @db.Uuid
+  domainId    String   @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Domain      Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+}

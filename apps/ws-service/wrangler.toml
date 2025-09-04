@@ -1,18 +1,19 @@
 name = "weeziq-ws-service"
 compatibility_date = "2024-01-15"
 compatibility_flags = ["nodejs_compat"]
-
-# Main entry point
 main = "src/index.ts"
 
-# Environment variables
-[vars]
-NODE_ENV = "production"
+[durable_objects]
+bindings = [
+  { name = "CHATROOMS", class_name = "ChatRoomDurableObject" }
+]
 
+[[migrations]]
+tag = "v1"
+new_classes = ["ChatRoomDurableObject"]
 
+[env.production]
+name = "weeziq-ws-service"
 
-# Environment variables (secrets)
-# These need to be set via wrangler secret put
-# - OPENAI_API_KEY
-# - GOOGLE_AI_API_KEY
-# - ALLOWED_ORIGINS
+[env.staging]
+name = "weeziq-ws-service-staging"
