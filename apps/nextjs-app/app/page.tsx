@@ -24,7 +24,7 @@ export default function LandingPage() {
         </main>
         <AnimatedSection
           id="features-section"
-          className="relative z-10 max-w-[1280px] mx-auto mt-16 sm:mt-[150px] lg:mt-20 pt-20"
+          className="relative z-10 max-w-[1280px] mx-auto mt-16 sm:mt-[250px] lg:mt-20 pt-50"
           delay={0.2}
         >
           <BentoSection />

@@ -1,19 +1,12 @@
-import AiCodeReviews from "./bento/ai-code-reviews";
-import RealtimeCodingPreviews from "./bento/real-time-previews";
-import OneClickIntegrationsIllustration from "./bento/one-click-integrations-illustration";
-import MCPConnectivityIllustration from "./bento/mcp-connectivity-illustration";
-import EasyDeployment from "./bento/easy-deployment";
-import ParallelCodingAgents from "./bento/parallel-agents";
 import React from "react";
 
 interface BentoCardProps {
   title: string;
   description: string;
-  Component: React.ComponentType;
 }
 
-const BentoCard = ({ title, description, Component }: BentoCardProps) => (
-  <div className="overflow-hidden rounded-2xl bento-card-bg flex flex-col justify-start items-start relative">
+const BentoCard = ({ title, description }: BentoCardProps) => (
+  <div className="overflow-hidden rounded-2xl bento-card-bg flex flex-col justify-center items-center relative">
     {/* Background with blur effect */}
     <div
       className="absolute inset-0 rounded-2xl"
@@ -25,16 +18,15 @@ const BentoCard = ({ title, description, Component }: BentoCardProps) => (
     {/* Additional subtle gradient overlay */}
     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-2xl" />
 
-    <div className="self-stretch p-6 flex flex-col justify-start items-start gap-2 relative z-10">
-      <div className="self-stretch flex flex-col justify-start items-start gap-1.5">
-        <p className="self-stretch text-foreground text-lg font-normal leading-7">
-          {title} <br />
-          <span className="text-muted-foreground">{description}</span>
+    <div className="self-stretch p-8 flex flex-col justify-center items-center gap-4 relative z-10 min-h-[200px]">
+      <div className="self-stretch flex flex-col justify-center items-center gap-3 text-center">
+        <h3 className="text-foreground text-xl font-semibold leading-7">
+          {title}
+        </h3>
+        <p className="text-muted-foreground text-base font-normal leading-6 max-w-sm">
+          {description}
         </p>
       </div>
-    </div>
-    <div className="self-stretch h-72 relative -mt-0.5 z-10">
-      <Component />
     </div>
   </div>
 );
@@ -45,32 +37,26 @@ export function BentoSection() {
       title: "Smart conversation flows.",
       description:
         "AI that understands context and guides prospects naturally.",
-      Component: AiCodeReviews,
     },
     {
       title: "Real-time lead qualification",
       description: "Instantly identify and prioritize high-value prospects.",
-      Component: RealtimeCodingPreviews,
     },
     {
       title: "Seamless CRM integration",
       description: "Connect with Salesforce, HubSpot, and 50+ platforms.",
-      Component: OneClickIntegrationsIllustration,
     },
     {
       title: "Multi-channel deployment",
       description: "Deploy across website, WhatsApp, Slack, and more.",
-      Component: MCPConnectivityIllustration,
     },
     {
       title: "Parallel conversation handling",
       description: "Handle unlimited conversations simultaneously.",
-      Component: ParallelCodingAgents,
     },
     {
       title: "Instant setup & deployment",
       description: "Go live in minutes with our no-code builder.",
-      Component: EasyDeployment,
     },
   ];
 
@@ -92,7 +78,11 @@ export function BentoSection() {
         </div>
         <div className="self-stretch grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 z-10">
           {cards.map((card) => (
-            <BentoCard key={card.title} {...card} />
+            <BentoCard
+              key={card.title}
+              title={card.title}
+              description={card.description}
+            />
           ))}
         </div>
       </div>

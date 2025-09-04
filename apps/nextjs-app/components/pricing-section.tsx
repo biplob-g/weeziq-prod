@@ -13,7 +13,7 @@ export function PricingSection() {
 
   const basePricingPlans = [
     {
-      name: "Standard",
+      name: "Free",
       monthlyPriceUSD: 0,
       annualPriceUSD: 0, // Free plan
       description: "Perfect for small businesses getting started.",

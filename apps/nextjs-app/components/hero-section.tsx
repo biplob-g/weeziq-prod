@@ -21,12 +21,8 @@ export function HeroSection() {
           final purchase.
         </p>
       </div>
-      <Link
-        href="https://vercel.com/home"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <Button className="relative z-10 btn-primary-gradient px-8 py-3 font-medium text-base shadow-lg">
+      <Link href="/auth/sign-up" target="_blank" rel="noopener noreferrer">
+        <Button className="relative z-10 btn-primary-gradient px-8 py-3 font-medium text-base shadow-lg mb-5">
           Start Free Trial
         </Button>
       </Link>

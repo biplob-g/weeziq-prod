@@ -15,11 +15,7 @@ export function CTASection() {
             trial today.
           </p>
         </div>
-        <Link
-          href="https://vercel.com/home"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <Link href="/auth/sign-up" rel="noopener noreferrer">
           <Button
             className="btn-primary-gradient px-[30px] py-2 text-base font-medium leading-6 shadow-lg transition-all duration-200"
             size="lg"
